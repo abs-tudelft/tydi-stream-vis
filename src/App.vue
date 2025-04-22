@@ -1,47 +1,42 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div class="flex justify-center items-center h-screen bg-gray-100">
+    <div class="flex space-x-16">
+      <!-- Left Component -->
+      <ComponentBox title="Transmitter" :streams="streams" type="left" :lanes="n" />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <!-- Bus lanes -->
+      <div class="flex flex-col justify-center space-y-1">
+        <div
+          v-for="lane in n"
+          :key="lane"
+          class="w-1 h-24 bg-black"
+        ></div>
+      </div>
+
+      <!-- Right Component -->
+      <ComponentBox title="Receiver" :streams="streams" type="right" :lanes="n" />
     </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  </div>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+import ComponentBox from './components/ComponentBox.vue'
+
+const n = 6 // Number of lanes
+const k = 2 // Number of streams
+
+const streams = ref([
+  {
+    color: 'blue',
+    items: ['B<4>', 'B<4>', 'B<4>'],
+  },
+  {
+    color: 'red',
+    items: ['B<8>', 'B<8>'],
+  },
+])
+</script>
+
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
