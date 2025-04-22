@@ -1,21 +1,42 @@
 <template>
-  <div class="w-48 h-96 bg-white shadow-md rounded p-2 flex flex-col justify-between border">
+  <div class="w-64 h-96 bg-white shadow-md rounded p-2 flex flex-col justify-evenly border">
     <h3 class="text-center font-semibold text-sm">{{ title }}</h3>
-    <div class="flex-1 flex flex-col justify-evenly">
+    <div class="flex flex-col justify-evenly h-full">
       <div
         v-for="(stream, index) in streams"
         :key="index"
-        class="flex flex-col items-center space-y-1"
+        class="flex justify-between items-center"
       >
         <div
-          v-for="(item, i) in stream.items"
-          :key="i"
-          :class="[
-            'w-20 text-center rounded text-white text-xs py-1',
-            stream.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'
-          ]"
+          v-if="type === 'left'"
+          class="flex space-x-1 justify-end w-full"
         >
-          {{ item }}
+          <div
+            v-for="(item, i) in stream.transmitterItems"
+            :key="i"
+            :class="[
+              'w-16 text-center rounded text-white text-xs py-1',
+              stream.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'
+            ]"
+          >
+            {{ item }}
+          </div>
+        </div>
+
+        <div
+          v-else-if="type === 'right'"
+          class="flex space-x-1 justify-start w-full"
+        >
+          <div
+            v-for="(item, i) in stream.receiverItems"
+            :key="i"
+            :class="[
+              'w-16 text-center rounded text-white text-xs py-1',
+              stream.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'
+            ]"
+          >
+            {{ item }}
+          </div>
         </div>
       </div>
     </div>
@@ -27,6 +48,5 @@ defineProps({
   title: String,
   streams: Array,
   type: String,
-  lanes: Number,
 })
 </script>
