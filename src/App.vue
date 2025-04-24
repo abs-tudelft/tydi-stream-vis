@@ -1,4 +1,8 @@
 <template>
+  <div class="w-screen" style="height: 70vh">
+    <BlocklyCanvas />
+  </div>
+  <hr>
   <div class="flex flex-col justify-center items-center h-screen bg-gray-100">
     <div class="mb-4 flex space-x-4">
       <button @click="transferItem" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
@@ -45,6 +49,7 @@
 <script setup>
 import { ref } from 'vue'
 import ComponentBox from './components/ComponentBox.vue'
+import BlocklyCanvas from './components/BlocklyCanvas.vue'
 
 const streamItems = [
   ['B<4>', 'B<4>', 'B<4>'],
