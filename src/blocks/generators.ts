@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly'
-import { javascriptGenerator } from 'blockly/javascript'
+import {javascriptGenerator, Order} from 'blockly/javascript'
 
 javascriptGenerator.forBlock['group_def'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
@@ -13,7 +13,13 @@ javascriptGenerator.forBlock['union_def'] = function (block, generator) {
   return `union ${name} {\n${fields}};\n`
 }
 
-javascriptGenerator.forBlock['int_field'] = function (block, _generator) {
-  const name = block.getFieldValue('NAME')
-  return `  int ${name};\n`
+javascriptGenerator.forBlock['bit_field'] = function (block) {
+  const width = block.getFieldValue('WIDTH')
+  return [`bit(${width})`, Order.ATOMIC]
+}
+
+javascriptGenerator.forBlock['member'] = function (block, generator) {
+  const name = block.getFieldValue('MEMBER_NAME')
+  const value = generator.valueToCode(block,'MEMBER_VALUE', Order.ATOMIC)
+  return `  field ${name}: ${value};\n`
 }
