@@ -1,6 +1,8 @@
 const toolbox = {
     kind: 'flyoutToolbox',
     contents: [
+        { kind: 'block', type: 'streamlet' },
+        { kind: 'block', type: 'stream_def' },
         { kind: 'block', type: 'group_def' },
         { kind: 'block', type: 'union_def' },
         { kind: 'block', type: 'member' },

@@ -1,6 +1,16 @@
 import * as Blockly from 'blockly'
 import {javascriptGenerator, Order} from 'blockly/javascript'
 
+javascriptGenerator.forBlock['streamlet'] = function (block, generator) {
+  const name = block.getFieldValue('NAME')
+  return `streamlet ${name};\n`
+}
+
+javascriptGenerator.forBlock['stream_def'] = function (block, generator) {
+  const name = block.getFieldValue('NAME')
+  return `stream ${name};\n`
+}
+
 javascriptGenerator.forBlock['group_def'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
   const fields = generator.statementToCode(block, 'FIELDS')
