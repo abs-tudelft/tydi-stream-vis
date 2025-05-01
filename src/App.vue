@@ -1,9 +1,6 @@
 <template>
-  <div class="w-screen" style="height: 70vh">
-    <BlocklyCanvas />
-  </div>
-  <hr>
-  <stream-simulator />
+  <BlocklyCanvas />
+<!--  <stream-simulator />-->
 </template>
 
 <script lang="ts" setup>

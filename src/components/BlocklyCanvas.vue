@@ -1,5 +1,7 @@
 <template>
-  <div ref="blocklyDiv" class="w-full h-full"></div>
+  <div>
+    <div ref="blocklyDiv" style="height: 70vh"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -58,9 +60,4 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Make sure it stretches to full container */
-div {
-  width: 100%;
-  height: 100%;
-}
 </style>
