@@ -17,4 +17,15 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        // Remove the hash from the filename
+        entryFileNames: 'app.js',
+        chunkFileNames: 'chunk-[name].js',
+        assetFileNames: 'style.css'
+      }
+    }
+  },
 })

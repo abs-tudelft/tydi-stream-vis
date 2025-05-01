@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import type {Stream} from '../App.vue'
+import type {Stream} from './StreamSimulator.vue'
 
 interface Props {
   title: String,
