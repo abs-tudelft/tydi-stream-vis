@@ -46,17 +46,25 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref } from 'vue'
 import ComponentBox from './components/ComponentBox.vue'
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
 
-const streamItems = [
+const streamItems: string[][] = [
   ['B<4>', 'B<4>', 'B<4>'],
   ['B<8>', 'B<8>'],
 ]
 
-const streams = ref([
+export interface Stream {
+  color: string,
+  transmitterItems: string[],
+  receiverItems: string[],
+  lanes: number,
+  inTransit: string[],
+}
+
+const streams = ref<Stream[]>([
   {
     color: 'blue',
     transmitterItems: [... streamItems[0]],
@@ -77,17 +85,22 @@ function transferItem() {
   for (const stream of streams.value) {
     if (stream.transmitterItems.length > 0 && stream.inTransit.length < stream.lanes) {
       const item = stream.transmitterItems.shift()
-      stream.inTransit.push(item)
+      if (item !== undefined) {
+        stream.inTransit.push(item)
+      }
     } else if (stream.inTransit.length > 0) {
       const item = stream.inTransit.shift()
-      stream.receiverItems.push(item)
+      if (item !== undefined) {
+        stream.receiverItems.push(item)
+      }
     }
   }
 }
 
 function reset() {
   for (const [key, stream] of Object.entries(streams.value)) {
-    stream.transmitterItems = [... streamItems[key]]
+    const items = streamItems[key as any];
+    stream.transmitterItems = [... items]
     stream.receiverItems = []
     stream.inTransit = []
   }

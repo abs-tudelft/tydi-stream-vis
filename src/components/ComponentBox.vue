@@ -43,10 +43,14 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
+<script lang="ts" setup>
+import type {Stream} from '../App.vue'
+
+interface Props {
   title: String,
-  streams: Array,
+  streams: Stream[],
   type: String,
-})
+}
+
+defineProps<Props>()
 </script>
