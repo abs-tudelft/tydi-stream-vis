@@ -2,7 +2,7 @@
   <div>
     <div ref="blocklyDiv" style="height: 70vh"></div>
 
-    <div class="flex flex-col justify-center items-center bg-gray-100">
+    <div class="flex flex-col justify-center items-center">
       <div class="my-4 flex space-x-4">
         <button @click="blocklySave" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
           Save
@@ -11,10 +11,10 @@
           Load
         </button>
       </div>
-      <div class="flex flex-col justify-center items-center bg-gray-100 mb-6">
-        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" class="w-2xl mb-4" />
-        <code-highlight :code="chiselCode" language="scala" title="Tydi-Chisel code" class="w-2xl mb-4" />
-        <code-highlight :code="clashCode" language="haskell" title="Tydi-Clash code" class="w-2xl" />
+      <div class="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" />
+        <code-highlight :code="chiselCode" language="scala" title="Tydi-Chisel code" />
+        <code-highlight :code="clashCode" language="haskell" title="Tydi-Clash code" />
       </div>
     </div>
   </div>

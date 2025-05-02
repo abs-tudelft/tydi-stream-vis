@@ -9,7 +9,7 @@
         {{ copied ? 'Copied!' : 'Copy' }}
       </button>
     </div>
-    <pre class="rounded-b-lg m-0"><code ref="codeBlock" :class="languageClass"></code></pre>
+    <pre class="rounded-b-lg m-0 border border-gray-800"><code ref="codeBlock" :class="languageClass"></code></pre>
   </div>
 </template>
 
@@ -19,8 +19,6 @@ import hljs from 'highlight.js';
 // Import the languages you want to support
 import 'highlight.js/lib/languages/haskell';
 import 'highlight.js/lib/languages/scala';
-import 'highlight.js/lib/languages/c';
-import 'highlight.js/lib/languages/cpp';
 // Import your preferred styling (choose one)
 // import 'highlight.js/styles/atom-one-dark.css';
 import 'highlight.js/styles/github.css';
@@ -93,4 +91,7 @@ export default defineComponent({
 </script>
 
 <style>
+.hljs {
+  background: transparent;
+}
 </style>
