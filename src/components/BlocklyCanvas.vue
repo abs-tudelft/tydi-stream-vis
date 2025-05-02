@@ -26,7 +26,7 @@ import 'blockly/javascript' // Or your target generator
 import '@/blocks/dslBlocks'
 import '@/blocks/generators'
 import toolbox from "@/blocks/toolbox.ts";
-import {tlGenerator} from "@/blocks/generators";
+import {generateCode} from "@/blocks/generators";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
@@ -74,7 +74,7 @@ function updateCode(event: any) {
   if (!supportedEvents.has(event.type)) return;
 
   // @ts-ignore There is some mismatch between the properties of the workspace object and the expected type.
-  const code = tlGenerator.workspaceToCode(_workspace);
+  const code = generateCode(_workspace);
   tlCode.value = code;
   console.log(code);
 }
