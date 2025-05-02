@@ -32,7 +32,7 @@ tlGenerator.forBlock['stream_def'] = function (block, generator) {
   const c = block.getFieldValue('C')
   const d = block.getFieldValue('D')
   const n = block.getFieldValue('N')
-  const r = block.getFieldValue('R')
+  const r = (block.getFieldValue('R') === 'TRUE') ? 'true' : 'false';
   const e = generator.valueToCode(block, 'E', Order.ATOMIC)
   const u = generator.valueToCode(block, 'U', Order.ATOMIC)
   return [`Stream(${e}, c=${c}, d=${d}, n=${n}, r=${r}, u=${u})`, Order.ATOMIC]

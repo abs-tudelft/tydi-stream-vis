@@ -11,6 +11,9 @@
           Load
         </button>
       </div>
+      <div class="flex flex-col justify-center items-center bg-gray-100 mb-6">
+        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" class="w-2xl" />
+      </div>
     </div>
   </div>
 </template>
@@ -24,9 +27,11 @@ import '@/blocks/dslBlocks'
 import '@/blocks/generators'
 import toolbox from "@/blocks/toolbox.ts";
 import {tlGenerator} from "@/blocks/generators";
+import CodeHighlight from "@/components/CodeHighlight.vue";
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
+const tlCode = ref('// Start by creating a data structure')
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -58,6 +63,7 @@ function blocklyLoad() {
   Blockly.serialization.workspaces.load(JSON.parse(data), _workspace, false);
   Blockly.Events.enable();
   console.log("Loaded state from local storage.");
+  updateCode({type: 'change'});
 }
 
 function updateCode(event: any) {
@@ -69,6 +75,7 @@ function updateCode(event: any) {
 
   // @ts-ignore There is some mismatch between the properties of the workspace object and the expected type.
   const code = tlGenerator.workspaceToCode(_workspace);
+  tlCode.value = code;
   console.log(code);
 }
 
