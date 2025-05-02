@@ -23,7 +23,8 @@ function indent(code: string, level: number = 1, indentStr = '  '): string {
 clashGenerator.scrub_ = function(block, code, thisOnly) {
   const nextBlock = block.nextConnection && block.nextConnection.targetBlock();
   if (nextBlock && !thisOnly) {
-    const connector = (nextBlock.type === 'group_def') ? ":&:" : ":|:"
+    const parentBlock = block.getSurroundParent()
+    const connector = (parentBlock?.type === 'group_def') ? ":&:" : ":|:"
     return `${code} ${connector}\n${clashGenerator.blockToCode(nextBlock)}`;
   }
   return code;
