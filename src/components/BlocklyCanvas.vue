@@ -12,7 +12,9 @@
         </button>
       </div>
       <div class="flex flex-col justify-center items-center bg-gray-100 mb-6">
-        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" class="w-2xl" />
+        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" class="w-2xl mb-4" />
+        <code-highlight :code="chiselCode" language="scala" title="Tydi-Chisel code" class="w-2xl mb-4" />
+        <code-highlight :code="clashCode" language="haskell" title="Tydi-Clash code" class="w-2xl" />
       </div>
     </div>
   </div>
@@ -24,14 +26,17 @@ import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
 import '@/blocks/dslBlocks'
-import '@/blocks/generators'
 import toolbox from "@/blocks/toolbox.ts";
-import {generateCode} from "@/blocks/generators";
+import {generateTLCode} from "@/blocks/tlGenerator";
+import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
+import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
 const tlCode = ref('// Start by creating a data structure')
+const chiselCode = ref('// Start by creating a data structure')
+const clashCode = ref('-- Start by creating a data structure')
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -74,9 +79,15 @@ function updateCode(event: any) {
   if (!supportedEvents.has(event.type)) return;
 
   // @ts-ignore There is some mismatch between the properties of the workspace object and the expected type.
-  const code = generateCode(_workspace);
-  tlCode.value = code;
-  console.log(code);
+  const _tlCode = generateTLCode(_workspace);
+  // @ts-ignore
+  const _chiselCode = generateChiselCode(_workspace);
+  // @ts-ignore
+  const _clashCode = generateClashCode(_workspace);
+  tlCode.value = _tlCode;
+  chiselCode.value = _chiselCode;
+  clashCode.value = _clashCode;
+  console.log(_tlCode);
 }
 
 onMounted(() => {

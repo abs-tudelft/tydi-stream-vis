@@ -1,14 +1,15 @@
 import * as Blockly from 'blockly'
 
-export const tlGenerator = new Blockly.Generator('TydiLang');
+export const clashGenerator = new Blockly.Generator('Clash');
 
 const definitions: string[] = [];
+const preamble = `-- Please note Tydi-Clash is in beta and is not yet polished.`
 
-export function generateCode(workspace: Blockly.Workspace) {
+export function generateClashCode(workspace: Blockly.Workspace) {
   definitions.length = 0 // clear from previous runs
-  const mainCode = tlGenerator.workspaceToCode(workspace)
+  const mainCode = clashGenerator.workspaceToCode(workspace)
   const allDefinitions = definitions.join('\n\n')
-  return allDefinitions + '\n\n' + mainCode
+  return preamble + '\n\n' + allDefinitions + '\n\n' + mainCode
 }
 
 function indent(code: string, level: number = 1, indentStr = '  '): string {
@@ -19,10 +20,11 @@ function indent(code: string, level: number = 1, indentStr = '  '): string {
 }
 
 // Make sure subsequent statements are all emitted.
-tlGenerator.scrub_ = function(block, code, thisOnly) {
+clashGenerator.scrub_ = function(block, code, thisOnly) {
   const nextBlock = block.nextConnection && block.nextConnection.targetBlock();
   if (nextBlock && !thisOnly) {
-    return code + ";\n" + tlGenerator.blockToCode(nextBlock);
+    const connector = (nextBlock.type === 'group_def') ? ":&:" : ":|:"
+    return `${code} ${connector}\n${clashGenerator.blockToCode(nextBlock)}`;
   }
   return code;
 };
@@ -31,16 +33,14 @@ const Order = {
   ATOMIC: 0,
 };
 
-tlGenerator.forBlock['streamlet'] = function (block, generator) {
+clashGenerator.forBlock['streamlet'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
   const stream = generator.valueToCode(block, 'STREAM', Order.ATOMIC);
   return ""+
-`streamlet ${name} {
-  output: ${stream} out;
-};`
+`${name} :: () -> ${stream}`
 }
 
-tlGenerator.forBlock['stream_def'] = function (block, generator) {
+clashGenerator.forBlock['stream_def'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
   const c = block.getFieldValue('C')
   const d = block.getFieldValue('D')
@@ -48,38 +48,39 @@ tlGenerator.forBlock['stream_def'] = function (block, generator) {
   const r = (block.getFieldValue('R') === 'TRUE') ? 'true' : 'false';
   const e = generator.valueToCode(block, 'E', Order.ATOMIC)
   const u = generator.valueToCode(block, 'U', Order.ATOMIC)
-  const definition = `type ${name} = Stream(${e}, c=${c}, d=${d}, n=${n}, r=${r}, u=${u});`
+  const definition = `type ${name} = TydiSynth New (C ${c}) (D ${d}) (N ${n}) ${u} ${e}`
   definitions.push(definition)
-  return [name, Order.ATOMIC]
+  return [`${name}`, Order.ATOMIC]
 }
 
-tlGenerator.forBlock['group_def'] = function (block, generator) {
+clashGenerator.forBlock['group_def'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
   const fields = generator.statementToCode(block, 'FIELDS')
-  const definition = `Group ${name} {\n${fields};\n};`
+  const definition = `type ${name} = Group (\n${fields}\n)`
   definitions.push(definition)
-  return [name, Order.ATOMIC]
+  return [`${name}`, Order.ATOMIC]
 }
 
-tlGenerator.forBlock['union_def'] = function (block, generator) {
+clashGenerator.forBlock['union_def'] = function (block, generator) {
   const name = block.getFieldValue('NAME')
   const fields = generator.statementToCode(block, 'FIELDS')
-  const definition = `Union ${name} {\n${fields};\n};`
+  const nFields = fields.split('\n').length
+  const definition = `type ${name} = Union (\n${fields}\n)`
   definitions.push(definition)
-  return [name, Order.ATOMIC]
+  return [`${name}`, Order.ATOMIC]
 }
 
-tlGenerator.forBlock['bit_field'] = function (block) {
+clashGenerator.forBlock['bit_field'] = function (block) {
   const width = block.getFieldValue('WIDTH')
-  return [`Bit(${width})`, Order.ATOMIC]
+  return [`Unsigned ${width}`, Order.ATOMIC]
 }
 
-tlGenerator.forBlock['member'] = function (block, generator) {
+clashGenerator.forBlock['member'] = function (block, generator) {
   const name = block.getFieldValue('MEMBER_NAME')
   const value = generator.valueToCode(block,'MEMBER_VALUE', Order.ATOMIC)
-  return `  ${name}: ${value}`
+  return `${name} >:: ${value}`
 }
 
-tlGenerator.forBlock['logic_null'] = function (block) {
-  return [`Null`, Order.ATOMIC]
+clashGenerator.forBlock['logic_null'] = function (block) {
+  return [`()`, Order.ATOMIC]
 }
