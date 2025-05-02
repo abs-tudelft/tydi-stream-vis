@@ -1,4 +1,17 @@
-@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/*@import "tailwindcss/preflight.css" layer(base);*/
+@import "./preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@layer base {
+    ol,
+    ul,
+    menu {
+        list-style: initial;
+        padding-left: 1.85em;
+    }
+}
 
 /*body {
   min-height: 100vh;
