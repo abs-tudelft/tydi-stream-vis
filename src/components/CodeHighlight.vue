@@ -9,7 +9,7 @@
         {{ copied ? 'Copied!' : 'Copy' }}
       </button>
     </div>
-    <pre class="rounded-b-lg m-0 border border-gray-800"><code ref="codeBlock" :class="languageClass"></code></pre>
+    <pre class="rounded-b-lg m-0 border border-gray-800 text-base"><code ref="codeBlock" :class="languageClass"></code></pre>
   </div>
 </template>
 
