@@ -17,7 +17,7 @@ import {
   memberBArgs,
   memberBDef,
   streamBArgs, streamBDef,
-  streamletBArgs, stringStreamBDef
+  streamletBArgs, stringStreamBDef, unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
@@ -80,17 +80,50 @@ function processSchema(schema: any) {
 
   processNode(schema, stream, stream.getInput(streamBArgs.E)?.connection!)
 
-  function processNode(node: Schema, parentBlock: Blockly.BlockSvg, parentConnection: Blockly.Connection) {
+  function nullableNode(node: Schema, parentBlock: Blockly.BlockSvg, parentConnection: Blockly.Connection): Blockly.BlockSvg {
     const parentName = parentBlock.getFieldValue('NAME')?.snake2pascal()
+    const unionBlock = workspace.newBlock(unionBDef.type)
+    unionBlock.initSvg()
+    const unionName = (parentName ?? "My") + "Union";
+    unionBlock.setFieldValue(unionName, unionBArgs.NAME)
+    unionBlock.outputConnection.connect(parentConnection)
+
+    let connection = unionBlock.getInput(unionBArgs.FIELDS)?.connection!
+
+    // const subBlocks = [workspace.newBlock('logic_null'), processNode(node, unionBlock, unionBlock.getInput(unionBArgs.FIELDS)?.connection!)]
+
+    const nullMemberBlock = workspace.newBlock(memberBDef.type);
+    nullMemberBlock.initSvg()
+    nullMemberBlock.setFieldValue('null', memberBArgs.MEMBER_NAME)
+    connection.connect(nullMemberBlock.previousConnection!)
+    const nullBlock = workspace.newBlock('logic_null')
+    nullBlock.initSvg()
+    nullMemberBlock.getInput(memberBArgs.MEMBER_VALUE)?.connection!.connect(nullBlock.outputConnection!)
+
+    const dataMemberBlock = workspace.newBlock(memberBDef.type);
+    dataMemberBlock.initSvg()
+    nullMemberBlock.nextConnection?.connect(dataMemberBlock.previousConnection!)
+    dataMemberBlock.setFieldValue('value', memberBArgs.MEMBER_NAME)
+    processNode({...node, nullable: false}, unionBlock, dataMemberBlock.getInput(memberBArgs.MEMBER_VALUE)?.connection!)
+    return unionBlock
+  }
+
+  function processNode(node: Schema, parentBlock: Blockly.BlockSvg, parentConnection: Blockly.Connection): Blockly.BlockSvg {
+    if (node.nullable === true) {
+      return nullableNode(node, parentBlock, parentConnection)
+    }
+
+    const parentName = parentBlock.getFieldValue('NAME')?.snake2pascal()
+
     switch (node.type) {
       case 'object':
-        const group = workspace.newBlock(groupBDef.type)
-        group.initSvg()
+        const groupBlock = workspace.newBlock(groupBDef.type)
+        groupBlock.initSvg()
         const groupName = (parentName ?? "My") + "Group";
-        group.setFieldValue(groupName, groupBArgs.NAME)
-        group.outputConnection.connect(parentConnection)
+        groupBlock.setFieldValue(groupName, groupBArgs.NAME)
+        groupBlock.outputConnection.connect(parentConnection)
         let fields = []
-        let connection = group.getInput(groupBArgs.FIELDS)?.connection!
+        let connection = groupBlock.getInput(groupBArgs.FIELDS)?.connection!
 
         for (let [cName, cType] of Object.entries(node.properties!)) {
           const memberBlock = workspace.newBlock(memberBDef.type);
@@ -102,7 +135,7 @@ function processSchema(schema: any) {
           memberBlock.setFieldValue(cName, memberBArgs.MEMBER_NAME)
           processNode(cType, memberBlock, memberBlock.getInput(memberBArgs.MEMBER_VALUE)?.connection!)
         }
-        break
+        return groupBlock
       case 'array':
         const streamBlock = workspace.newBlock(streamBDef.type)
         streamBlock.initSvg()
@@ -110,29 +143,29 @@ function processSchema(schema: any) {
         streamBlock.setFieldValue(streamName, streamBArgs.NAME)
         parentConnection!.connect(streamBlock.outputConnection!)
         processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!)
-        break
+        return streamBlock
       case 'string':
         const stringStreamBlock = workspace.newBlock(stringStreamBDef.type)
         stringStreamBlock.initSvg()
         parentConnection!.connect(stringStreamBlock.outputConnection!)
-        break
+        return stringStreamBlock
       case 'number':
         const bitsBlock = workspace.newBlock(bitBDef.type)
         bitsBlock.initSvg()
         bitsBlock.setFieldValue(64, bitBArgs.WIDTH)
         parentConnection!.connect(bitsBlock.outputConnection!)
-        break
+        return bitsBlock
       case 'boolean':
         const boolBlock = workspace.newBlock(bitBDef.type)
         boolBlock.initSvg()
         boolBlock.setFieldValue(1, bitBArgs.WIDTH)
         parentConnection!.connect(boolBlock.outputConnection!)
-        break
+        return boolBlock
       case 'null':
         const nullBlock = workspace.newBlock('logic_null')
         nullBlock.initSvg()
         parentConnection!.connect(nullBlock.outputConnection!)
-        break
+        return nullBlock
     }
   }
 }
