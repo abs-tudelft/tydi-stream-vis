@@ -33,7 +33,7 @@ export default defineComponent({
     },
     language: {
       type: String,
-      default: 'c'
+      default: 'scala'
     },
     title: {
       type: String,

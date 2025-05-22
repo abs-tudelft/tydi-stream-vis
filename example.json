@@ -1,0 +1,21 @@
+{
+  "string_example": "This is a string (text)",
+  "number_example_integer": 12345,
+  "number_example_float": 123.45,
+  "boolean_example_true": true,
+  "boolean_example_false": false,
+  "array_example": [
+    "item1",
+    2,
+    true,
+    null
+  ],
+  "object_example": {
+    "key1": "value1",
+    "key2": 100,
+    "nested_object": {
+      "nested_key": "nested value"
+    }
+  },
+  "null_example": null
+}

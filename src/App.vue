@@ -1,4 +1,5 @@
 <template>
+  <DataImport />
   <BlocklyCanvas />
 <!--  <stream-simulator />-->
 </template>
@@ -6,6 +7,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
+import DataImport from "@/components/DataImport.vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 </script>
