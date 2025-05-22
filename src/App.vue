@@ -9,8 +9,16 @@ import { ref } from 'vue'
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
 import DataImport from "@/components/DataImport.vue";
 import * as Blockly from "blockly/core";
-import {renderManagement} from "blockly";
 import type {Schema} from "@/schemaParser.ts";
+import {
+  bitBArgs, bitBDef,
+  groupBArgs,
+  groupBDef,
+  memberBArgs,
+  memberBDef,
+  streamBArgs, streamBDef,
+  streamletBArgs
+} from "@/blocks/dslBlocks.ts";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const schema = ref<any>(null)
@@ -33,54 +41,53 @@ function processSchema(schema: any) {
   const workspaceSize = workspace.getMetricsManager().getSvgMetrics()
   // Position to the top left corner of the workspace
   streamlet.moveBy(-(workspaceSize.width/2)+200, -(workspaceSize.height/2)+80)
-  streamlet.setFieldValue('RootStreamlet', "NAME")
+  streamlet.setFieldValue('RootStreamlet', streamletBArgs.NAME)
 
-  const stream = workspace.newBlock('stream_def')
+  const stream = workspace.newBlock(streamBDef.type)
   stream.initSvg()
-  stream.setFieldValue('MyStream', "NAME")
+  stream.setFieldValue('MyStream', streamBArgs.NAME)
   streamlet.getInput("STREAM")?.connection!.connect(stream.outputConnection!)
 
-  processNode(schema, stream, stream.getInput("E")?.connection!)
+  processNode(schema, stream, stream.getInput(streamBArgs.E)?.connection!)
 
   function processNode(node: Schema, parentBlock: Blockly.BlockSvg, parentConnection: Blockly.Connection) {
     switch (node.type) {
       case 'object':
-        const group = workspace.newBlock('group_def')
+        const group = workspace.newBlock(groupBDef.type)
         group.initSvg()
         group.outputConnection.connect(parentConnection)
         let fields = []
-        let connection = group.getInput("FIELDS")?.connection!
+        let connection = group.getInput(groupBArgs.FIELDS)?.connection!
 
         for (let [cName, cType] of Object.entries(node.properties!)) {
-          const memberBlock = workspace.newBlock('member');
+          const memberBlock = workspace.newBlock(memberBDef.type);
           memberBlock.initSvg()
           fields.push(memberBlock)
           connection.connect(memberBlock.previousConnection!)
           connection = memberBlock.nextConnection
 
-          memberBlock.setFieldValue(cName, "MEMBER_NAME")
-          processNode(cType, memberBlock, memberBlock.getInput("MEMBER_VALUE")?.connection!)
+          memberBlock.setFieldValue(cName, memberBArgs.MEMBER_NAME)
+          processNode(cType, memberBlock, memberBlock.getInput(memberBArgs.MEMBER_VALUE)?.connection!)
         }
-        // parentBlock.getInput("FIELDS")?.connection!.connect(group.outputConnection!)
         break
       case 'array':
-        const streamBlock = workspace.newBlock('stream_def')
+        const streamBlock = workspace.newBlock(streamBDef.type)
         streamBlock.initSvg()
         const parentName = parentBlock.getFieldValue('MEMBER_NAME') ?? parentBlock.getFieldValue('NAME') ?? "MyStream"
-        streamBlock.setFieldValue(parentName, "NAME")
+        streamBlock.setFieldValue(parentName, streamBArgs.NAME)
         parentConnection!.connect(streamBlock.outputConnection!)
-        processNode(node.items!, streamBlock, streamBlock.getInput("E")?.connection!)
+        processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!)
         break
       case 'number':
-        const bitsBlock = workspace.newBlock('bit_field')
+        const bitsBlock = workspace.newBlock(bitBDef.type)
         bitsBlock.initSvg()
-        bitsBlock.setFieldValue(64, "WIDTH")
+        bitsBlock.setFieldValue(64, bitBArgs.WIDTH)
         parentConnection!.connect(bitsBlock.outputConnection!)
         break
       case 'boolean':
-        const boolBlock = workspace.newBlock('bit_field')
+        const boolBlock = workspace.newBlock(bitBDef.type)
         boolBlock.initSvg()
-        boolBlock.setFieldValue(1, "WIDTH")
+        boolBlock.setFieldValue(1, bitBArgs.WIDTH)
         parentConnection!.connect(boolBlock.outputConnection!)
         break
       case 'null':

@@ -3,6 +3,7 @@ import * as Blockly from 'blockly'
 export interface BlocklyBlockDefinition {
   type: string;
   message0?: string;
+  argMap: Record<string, string>;
   args0?: BlocklyBlockArg[];
   output?: string | string[];
   previousStatement?: string | string[] | null;
@@ -93,9 +94,16 @@ export interface BlocklyInputEndRow extends BlocklyFieldBase {
   type: "input_end_row";
 }
 
-const memberBlockDefinition: BlocklyBlockDefinition = {
+export const memberBArgs = {
+  MEMBER_NAME: "MEMBER_NAME",
+  COLON: "COLON",
+  MEMBER_VALUE: "MEMBER_VALUE"
+}
+
+export const memberBDef: BlocklyBlockDefinition = {
   type: "member",
   message0: "%1 %2 %3",
+  argMap: memberBArgs,
   args0: [
     { type: "field_input", name: "MEMBER_NAME", text: "" },
     { type: "field_label", name: "COLON", text: ":" },
@@ -107,9 +115,14 @@ const memberBlockDefinition: BlocklyBlockDefinition = {
   tooltip: 'Member field for Groups and Unions',
 }
 
-const bitFieldDefinition: BlocklyBlockDefinition = {
+export const bitBArgs = {
+  WIDTH: 'WIDTH'
+};
+
+export const bitBDef: BlocklyBlockDefinition = {
   type: 'bit_field',
   message0: 'Bit (%1)',
+  argMap: bitBArgs,
   args0: [
     { type: 'field_input', name: 'WIDTH', text: 'bitwidth' }
   ],
@@ -119,9 +132,15 @@ const bitFieldDefinition: BlocklyBlockDefinition = {
   output: 'TydiEl'
 };
 
-const unionBlockDefinition: BlocklyBlockDefinition = {
+export const unionBArgs = {
+  NAME: "NAME",
+  FIELDS: "FIELDS"
+};
+
+export const unionBDef: BlocklyBlockDefinition = {
   type: 'union_def',
   message0: 'Union %1 {\n%2 }',
+  argMap: unionBArgs,
   args0: [
     { type: 'field_input', name: 'NAME', text: 'MyUnion' },
     { type: 'input_statement', name: 'FIELDS' }
@@ -132,9 +151,15 @@ const unionBlockDefinition: BlocklyBlockDefinition = {
   output: 'TydiEl'
 };
 
-const groupBlockDefinition: BlocklyBlockDefinition = {
+export const groupBArgs = {
+  NAME: "NAME",
+  FIELDS: "FIELDS"
+};
+
+export const groupBDef: BlocklyBlockDefinition = {
   type: 'group_def',
   message0: 'Group %1 {\n%2}',
+  argMap: groupBArgs,
   args0: [
     { type: 'field_input', name: 'NAME', text: 'MyGroup' },
     { type: 'input_statement', name: 'FIELDS' }
@@ -145,11 +170,22 @@ const groupBlockDefinition: BlocklyBlockDefinition = {
   output: 'TydiEl'
 };
 
-const streamBlock: BlocklyBlockDefinition = {
+export const streamBArgs = {
+  NAME: "NAME",
+  C: "C",
+  D: "D",
+  N: "N",
+  R: "R",
+  E: "E",
+  U: "U"
+};
+
+export const streamBDef: BlocklyBlockDefinition = {
   type: "stream_def",
   tooltip: "Define a Tydi Stream",
   helpUrl: "",
   message0: "Stream %1 %2 c: %3 d: %4 n: %5 r: %6 %7 e: %8 u: %9",
+  argMap: streamBArgs,
   args0: [
     {
       type: "field_input",
@@ -210,11 +246,17 @@ const streamBlock: BlocklyBlockDefinition = {
   inputsInline: false
 };
 
-const streamletBlock = {
+export const streamletBArgs = {
+  NAME: "NAME",
+  STREAM: "STREAM"
+};
+
+export const streamletBDef = {
   type: "streamlet",
   tooltip: "Creates a streamlet that accepts streams",
   helpUrl: "",
   message0: "Streamlet %1 , stream: %2",
+  argMapping: streamletBArgs,
   args0: [
     {
       type: "field_input",
@@ -231,10 +273,10 @@ const streamletBlock = {
 };
 
 Blockly.defineBlocksWithJsonArray([
-  streamletBlock,
-  streamBlock,
-  groupBlockDefinition,
-  unionBlockDefinition,
-  bitFieldDefinition,
-  memberBlockDefinition
+  streamletBDef,
+  streamBDef,
+  groupBDef,
+  unionBDef,
+  bitBDef,
+  memberBDef
 ])

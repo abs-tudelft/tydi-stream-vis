@@ -1,4 +1,12 @@
 import * as Blockly from 'blockly'
+import {
+  bitBArgs, bitBDef,
+  groupBArgs, groupBDef,
+  memberBArgs, memberBDef,
+  streamBArgs, streamBDef,
+  streamletBArgs, streamletBDef,
+  unionBArgs, unionBDef
+} from "@/blocks/dslBlocks.ts";
 
 export const chiselGenerator = new Blockly.Generator('Chisel');
 
@@ -33,9 +41,9 @@ const Order = {
   ATOMIC: 0,
 };
 
-chiselGenerator.forBlock['streamlet'] = function (block, generator) {
-  const name = block.getFieldValue('NAME')
-  const stream = generator.valueToCode(block, 'STREAM', Order.ATOMIC);
+chiselGenerator.forBlock[streamletBDef.type] = function (block, generator) {
+  const name = block.getFieldValue(streamletBArgs.NAME)
+  const stream = generator.valueToCode(block, streamletBArgs.STREAM, Order.ATOMIC);
   return ""+
 `class ${name} extends TydiModule {
   private val outputStream = ${stream}
@@ -43,44 +51,44 @@ chiselGenerator.forBlock['streamlet'] = function (block, generator) {
 }`
 }
 
-chiselGenerator.forBlock['stream_def'] = function (block, generator) {
-  const name = block.getFieldValue('NAME')
-  const c = block.getFieldValue('C')
-  const d = block.getFieldValue('D')
-  const n = block.getFieldValue('N')
-  const r = (block.getFieldValue('R') === 'TRUE') ? 'true' : 'false';
-  const e = generator.valueToCode(block, 'E', Order.ATOMIC)
-  const u = generator.valueToCode(block, 'U', Order.ATOMIC)
+chiselGenerator.forBlock[streamBDef.type] = function (block, generator) {
+  const name = block.getFieldValue(streamBArgs.NAME)
+  const c = block.getFieldValue(streamBArgs.C)
+  const d = block.getFieldValue(streamBArgs.D)
+  const n = block.getFieldValue(streamBArgs.N)
+  const r = (block.getFieldValue(streamBArgs.R) === 'TRUE') ? 'true' : 'false';
+  const e = generator.valueToCode(block, streamBArgs.E, Order.ATOMIC)
+  const u = generator.valueToCode(block, streamBArgs.U, Order.ATOMIC)
   const definition = `class ${name} extends PhysicalStreamDetailed(e=${e}, c=${c}, d=${d}, n=${n}, r=${r}, u=${u})`
   definitions.push(definition)
   return [`new ${name}`, Order.ATOMIC]
 }
 
-chiselGenerator.forBlock['group_def'] = function (block, generator) {
-  const name = block.getFieldValue('NAME')
-  const fields = generator.statementToCode(block, 'FIELDS')
+chiselGenerator.forBlock[groupBDef.type] = function (block, generator) {
+  const name = block.getFieldValue(groupBArgs.NAME)
+  const fields = generator.statementToCode(block, groupBArgs.FIELDS)
   const definition = `class ${name} extends Group {\n${fields}\n}`
   definitions.push(definition)
   return [`new ${name}`, Order.ATOMIC]
 }
 
-chiselGenerator.forBlock['union_def'] = function (block, generator) {
-  const name = block.getFieldValue('NAME')
-  const fields = generator.statementToCode(block, 'FIELDS')
+chiselGenerator.forBlock[unionBDef.type] = function (block, generator) {
+  const name = block.getFieldValue(unionBArgs.NAME)
+  const fields = generator.statementToCode(block, unionBArgs.FIELDS)
   const nFields = fields.split('\n').length
   const definition = `class ${name} extends Union(${nFields}) {\n${fields}\n}`
   definitions.push(definition)
   return [`new ${name}`, Order.ATOMIC]
 }
 
-chiselGenerator.forBlock['bit_field'] = function (block) {
-  const width = block.getFieldValue('WIDTH')
+chiselGenerator.forBlock[bitBDef.type] = function (block) {
+  const width = block.getFieldValue(bitBArgs.WIDTH)
   return [`BitsEl(${width}.W)`, Order.ATOMIC]
 }
 
-chiselGenerator.forBlock['member'] = function (block, generator) {
-  const name = block.getFieldValue('MEMBER_NAME')
-  const value = generator.valueToCode(block,'MEMBER_VALUE', Order.ATOMIC)
+chiselGenerator.forBlock[memberBDef.type] = function (block, generator) {
+  const name = block.getFieldValue(memberBArgs.MEMBER_NAME)
+  const value = generator.valueToCode(block,memberBArgs.MEMBER_VALUE, Order.ATOMIC)
   return `val ${name} = ${value}`
 }
 
