@@ -5,6 +5,7 @@ import {
   memberBArgs, memberBDef,
   streamBArgs, streamBDef,
   streamletBArgs, streamletBDef,
+  stringStreamBArgs, stringStreamBDef,
   unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
 
@@ -62,6 +63,14 @@ chiselGenerator.forBlock[streamBDef.type] = function (block, generator) {
   const definition = `class ${name} extends PhysicalStreamDetailed(e=${e}, c=${c}, d=${d}, n=${n}, r=${r}, u=${u})`
   definitions.push(definition)
   return [`new ${name}`, Order.ATOMIC]
+}
+
+chiselGenerator.forBlock[stringStreamBDef.type] = function (block, generator) {
+  const c = block.getFieldValue(stringStreamBArgs.C)
+  const d = block.getFieldValue(stringStreamBArgs.D)
+  const n = block.getFieldValue(stringStreamBArgs.N)
+  const r = (block.getFieldValue(stringStreamBArgs.R) === 'TRUE') ? 'true' : 'false';
+  return [`new StringStream(c=${c}, d=${d}, n=${n}, r=${r})`, Order.ATOMIC]
 }
 
 chiselGenerator.forBlock[groupBDef.type] = function (block, generator) {

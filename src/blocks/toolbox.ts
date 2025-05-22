@@ -4,6 +4,7 @@ import {
     memberBDef,
     streamBDef,
     streamletBDef,
+    stringStreamBDef,
     unionBDef
 } from "@/blocks/dslBlocks.ts";
 
@@ -16,7 +17,7 @@ const toolbox = {
         { kind: 'block', type: unionBDef.type },
         { kind: 'block', type: memberBDef.type },
         { kind: 'block', type: bitBDef.type },
-        // Default blocks for inspration
+        { kind: 'block', type: stringStreamBDef.type },
         // Default blocks for inspiration
         // { kind: 'block', type: 'text' },
         // { kind: 'block', type: 'logic_boolean' },

@@ -246,6 +246,56 @@ export const streamBDef: BlocklyBlockDefinition = {
   inputsInline: false
 };
 
+export const stringStreamBArgs = {
+  C: "C",
+  D: "D",
+  N: "N",
+  R: "R"
+};
+
+export const stringStreamBDef: BlocklyBlockDefinition = {
+  type: "string_stream_def",
+  tooltip: "Place a string stream",
+  helpUrl: "",
+  message0: "String stream c: %1 d: %2 n: %3 r: %4",
+  argMap: streamBArgs,
+  args0: [
+    {
+      type: "field_number",
+      name: "C",
+      value: 8,
+      min: 1,
+      max: 8,
+      precision: 1
+    },
+    {
+      type: "field_number",
+      name: "D",
+      value: 1,
+      min: 1,
+      precision: 1
+    },
+    {
+      type: "field_number",
+      name: "N",
+      value: 1,
+      min: 1,
+      precision: 1
+    },
+    {
+      type: "field_checkbox",
+      name: "R",
+      checked: "FALSE"
+    },
+  ],
+  output: [
+    "TydiStream",
+    "TydiEl"
+  ],
+  colour: 0,
+  inputsInline: false
+};
+
 export const streamletBArgs = {
   NAME: "NAME",
   STREAM: "STREAM"
@@ -278,5 +328,6 @@ Blockly.defineBlocksWithJsonArray([
   groupBDef,
   unionBDef,
   bitBDef,
-  memberBDef
+  memberBDef,
+  stringStreamBDef,
 ])

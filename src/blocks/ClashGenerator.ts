@@ -5,6 +5,7 @@ import {
   memberBArgs, memberBDef,
   streamBArgs, streamBDef,
   streamletBArgs, streamletBDef,
+  stringStreamBArgs, stringStreamBDef,
   unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
 import {chiselGenerator} from "@/blocks/ChiselGenerator.ts";
@@ -61,6 +62,14 @@ clashGenerator.forBlock[streamBDef.type] = function (block, generator) {
   const definition = `type ${name} = TydiSynth New (C ${c}) (D ${d}) (N ${n}) ${u} ${e}`
   definitions.push(definition)
   return [`${name}`, Order.ATOMIC]
+}
+
+clashGenerator.forBlock[stringStreamBDef.type] = function (block, generator) {
+  const c = block.getFieldValue(stringStreamBArgs.C)
+  const d = block.getFieldValue(stringStreamBArgs.D)
+  const n = block.getFieldValue(stringStreamBArgs.N)
+  const r = (block.getFieldValue(stringStreamBArgs.R) === 'TRUE') ? 'true' : 'false';
+  return [`StringStream (C ${c}) (D ${d}) (N ${n})`, Order.ATOMIC]
 }
 
 clashGenerator.forBlock[groupBDef.type] = function (block, generator) {

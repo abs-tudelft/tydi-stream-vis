@@ -5,6 +5,7 @@ import {
   memberBArgs, memberBDef,
   streamBArgs, streamBDef,
   streamletBArgs, streamletBDef,
+  stringStreamBArgs, stringStreamBDef,
   unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
 import {chiselGenerator} from "@/blocks/ChiselGenerator.ts";
@@ -60,6 +61,14 @@ tlGenerator.forBlock[streamBDef.type] = function (block, generator) {
   const definition = `type ${name} = Stream(${e}, c=${c}, d=${d}, n=${n}, r=${r}, u=${u});`
   definitions.push(definition)
   return [name, Order.ATOMIC]
+}
+
+tlGenerator.forBlock[stringStreamBDef.type] = function (block, generator) {
+  const c = block.getFieldValue(stringStreamBArgs.C)
+  const d = block.getFieldValue(stringStreamBArgs.D)
+  const n = block.getFieldValue(stringStreamBArgs.N)
+  const r = (block.getFieldValue(stringStreamBArgs.R) === 'TRUE') ? 'true' : 'false';
+  return [`StringStream(c=${c}, d=${d}, n=${n}, r=${r})`, Order.ATOMIC]
 }
 
 tlGenerator.forBlock[groupBDef.type] = function (block, generator) {
