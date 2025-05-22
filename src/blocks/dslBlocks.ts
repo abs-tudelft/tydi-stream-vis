@@ -95,7 +95,7 @@ export interface BlocklyInputEndRow extends BlocklyFieldBase {
 }
 
 export const memberBArgs = {
-  MEMBER_NAME: "MEMBER_NAME",
+  MEMBER_NAME: "NAME",
   COLON: "COLON",
   MEMBER_VALUE: "MEMBER_VALUE"
 }
@@ -105,7 +105,7 @@ export const memberBDef: BlocklyBlockDefinition = {
   message0: "%1 %2 %3",
   argMap: memberBArgs,
   args0: [
-    { type: "field_input", name: "MEMBER_NAME", text: "" },
+    { type: "field_input", name: "NAME", text: "" },
     { type: "field_label", name: "COLON", text: ":" },
     { type: "input_value", name: "MEMBER_VALUE" }
   ],
