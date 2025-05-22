@@ -9,7 +9,7 @@
         {{ copied ? 'Copied!' : 'Copy' }}
       </button>
     </div>
-    <pre class="rounded-b-lg m-0 border border-gray-800 text-base"><code ref="codeBlock" :class="languageClass"></code></pre>
+    <pre class="highlight-layer rounded-b-lg m-0 border border-gray-800 text-base"><code ref="codeBlock" :class="languageClass"></code></pre>
   </div>
 </template>
 
@@ -91,6 +91,10 @@ export default defineComponent({
 </script>
 
 <style>
+.highlight-layer code {
+  max-height: 60vh;
+}
+
 .hljs {
   background: transparent;
 }

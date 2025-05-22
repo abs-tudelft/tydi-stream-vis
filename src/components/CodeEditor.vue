@@ -24,7 +24,7 @@
         ref="highlightLayer"
         class="highlight-layer rounded-b-lg m-0 pointer-events-none inset-0 z-10"
         aria-hidden="true"
-      ><code :class="languageClass"></code></pre>
+      ><code ref="codeEl" :class="languageClass"></code></pre>
 
       <!-- Editable textarea -->
       <textarea
@@ -77,6 +77,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const textarea = ref<HTMLTextAreaElement | null>(null);
     const highlightLayer = ref<HTMLPreElement | null>(null);
+    const codeEl = ref<HTMLPreElement | null>(null);
     const copied = ref<boolean>(false);
     const languageClass = ref<string>(`language-${props.language}`);
 
@@ -88,9 +89,9 @@ export default defineComponent({
 
     // Sync scroll between textarea and highlight layer
     const syncScroll = (): void => {
-      if (textarea.value && highlightLayer.value) {
-        highlightLayer.value.scrollTop = textarea.value.scrollTop;
-        highlightLayer.value.scrollLeft = textarea.value.scrollLeft;
+      if (textarea.value && codeEl.value) {
+        codeEl.value.scrollTop = textarea.value.scrollTop;
+        codeEl.value.scrollLeft = textarea.value.scrollLeft;
       }
     };
 
@@ -203,6 +204,7 @@ export default defineComponent({
     return {
       textarea,
       highlightLayer,
+      codeEl,
       copied,
       languageClass,
       handleInput,
@@ -219,7 +221,7 @@ export default defineComponent({
 @reference "../assets/main.css";
 
 .code-editor-container {
-  @apply font-mono text-sm overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700 mb-4;
+  @apply font-mono text-sm overflow-hidden rounded-lg;
   position: relative;
 }
 
@@ -252,10 +254,10 @@ export default defineComponent({
 }
 
 /* Ensure both layers have the same dimensions */
-.highlight-layer,
+.highlight-layer code,
 .editor-textarea {
   min-height: 200px;
-  max-height: 500px;
+  max-height: 60vh;
   overflow-y: auto;
 }
 
