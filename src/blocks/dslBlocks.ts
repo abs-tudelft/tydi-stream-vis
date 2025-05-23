@@ -4,7 +4,7 @@ export interface BlocklyBlockDefinition {
   type: string;
   message0?: string;
   argMap: Record<string, string>;
-  args0?: BlocklyBlockArg[];
+  args0: BlocklyBlockArg[];
   output?: string | string[];
   previousStatement?: string | string[] | null;
   nextStatement?: string | string[] | null;
@@ -100,75 +100,83 @@ export const memberBArgs = {
   MEMBER_VALUE: "MEMBER_VALUE"
 }
 
-export const memberBDef: BlocklyBlockDefinition = {
-  type: "member",
-  message0: "%1 %2 %3",
-  argMap: memberBArgs,
-  args0: [
-    { type: "field_input", name: "NAME", text: "" },
-    { type: "field_label", name: "COLON", text: ":" },
-    { type: "input_value", name: "MEMBER_VALUE" }
-  ],
-  previousStatement: null,
-  nextStatement: null,
-  colour: 230,
-  tooltip: 'Member field for Groups and Unions',
+class MemberBDef implements BlocklyBlockDefinition {
+  type = "member"
+  message0 = "%1 %2 %3"
+  argMap = memberBArgs
+  args0: BlocklyBlockArg[] = [
+    { type: "field_input", name: this.argMap.MEMBER_NAME, text: "" },
+    { type: "field_label", name: this.argMap.COLON, text: ":" },
+    { type: "input_value", name: this.argMap.MEMBER_VALUE }
+  ]
+  previousStatement = null
+  nextStatement = null
+  colour = 230
+  tooltip = 'Member field for Groups and Unions'
 }
+
+export const memberBDef = new MemberBDef();
 
 export const bitBArgs = {
   WIDTH: 'WIDTH'
 };
 
-export const bitBDef: BlocklyBlockDefinition = {
-  type: 'bit_field',
-  message0: 'Bit (%1)',
-  argMap: bitBArgs,
-  args0: [
-    { type: 'field_input', name: 'WIDTH', text: 'bitwidth' }
-  ],
-  colour: 120,
-  tooltip: 'Bit field',
-  helpUrl: '',
-  output: 'TydiEl'
-};
+class BitBDef implements BlocklyBlockDefinition {
+  type = 'bit_field'
+  message0 = 'Bit (%1)'
+  argMap = bitBArgs
+  args0: BlocklyBlockArg[] = [
+    { type: 'field_input', name: this.argMap.WIDTH, text: 'bitwidth' }
+  ]
+  colour = 120
+  tooltip = 'Bit field'
+  helpUrl = ''
+  output = 'TydiEl'
+}
+
+export const bitBDef = new BitBDef();
 
 export const unionBArgs = {
   NAME: "NAME",
   FIELDS: "FIELDS"
 };
 
-export const unionBDef: BlocklyBlockDefinition = {
-  type: 'union_def',
-  message0: 'Union %1 {\n%2 }',
-  argMap: unionBArgs,
-  args0: [
-    { type: 'field_input', name: 'NAME', text: 'MyUnion' },
-    { type: 'input_statement', name: 'FIELDS' }
-  ],
-  colour: 20,
-  tooltip: 'Define a union (shared memory layout)',
-  helpUrl: '',
-  output: 'TydiEl'
-};
+class UnionBDef implements BlocklyBlockDefinition {
+  type = 'union_def'
+  message0 = 'Union %1 {\n%2 }'
+  argMap = unionBArgs
+  args0: BlocklyBlockArg[] = [
+    { type: 'field_input', name: this.argMap.NAME, text: 'MyUnion' },
+    { type: 'input_statement', name: this.argMap.FIELDS }
+  ]
+  colour = 20
+  tooltip = 'Define a union (shared memory layout)'
+  helpUrl = ''
+  output = 'TydiEl'
+}
+
+export const unionBDef = new UnionBDef()
 
 export const groupBArgs = {
   NAME: "NAME",
   FIELDS: "FIELDS"
 };
 
-export const groupBDef: BlocklyBlockDefinition = {
-  type: 'group_def',
-  message0: 'Group %1 {\n%2}',
-  argMap: groupBArgs,
-  args0: [
-    { type: 'field_input', name: 'NAME', text: 'MyGroup' },
-    { type: 'input_statement', name: 'FIELDS' }
-  ],
-  colour: 210,
-  tooltip: 'Define a data group (like a struct)',
-  helpUrl: '',
-  output: 'TydiEl'
-};
+class GroupBDef implements BlocklyBlockDefinition {
+  type = 'group_def'
+  message0 = 'Group %1 {\n%2}'
+  argMap = groupBArgs
+  args0: BlocklyBlockArg[] = [
+    { type: 'field_input', name: this.argMap.NAME, text: 'MyGroup' },
+    { type: 'input_statement', name: this.argMap.FIELDS }
+  ]
+  colour= 210
+  tooltip = 'Define a data group (like a struct)'
+  helpUrl = ''
+  output = 'TydiEl'
+}
+
+export const groupBDef = new GroupBDef();
 
 export const streamBArgs = {
   NAME: "NAME",
@@ -180,16 +188,16 @@ export const streamBArgs = {
   U: "U"
 };
 
-export const streamBDef: BlocklyBlockDefinition = {
-  type: "stream_def",
-  tooltip: "Define a Tydi Stream",
-  helpUrl: "",
-  message0: "Stream %1 %2 c: %3 d: %4 n: %5 r: %6 %7 e: %8 u: %9",
-  argMap: streamBArgs,
-  args0: [
+class StreamBDef implements BlocklyBlockDefinition {
+  type = "stream_def"
+  tooltip = "Define a Tydi Stream"
+  helpUrl = ""
+  message0 = "Stream %1 %2 c: %3 d: %4 n: %5 r: %6 %7 e: %8 u: %9"
+  argMap = streamBArgs
+  args0: BlocklyBlockArg[] = [
     {
       type: "field_input",
-      name: "NAME",
+      name: this.argMap.NAME,
       text: "MyStream"
     },
     {
@@ -198,7 +206,7 @@ export const streamBDef: BlocklyBlockDefinition = {
     },
     {
       type: "field_number",
-      name: "C",
+      name: this.argMap.C,
       value: 8,
       min: 1,
       max: 8,
@@ -206,21 +214,21 @@ export const streamBDef: BlocklyBlockDefinition = {
     },
     {
       type: "field_number",
-      name: "D",
+      name: this.argMap.D,
       value: 1,
       min: 1,
       precision: 1
     },
     {
       type: "field_number",
-      name: "N",
+      name: this.argMap.N,
       value: 1,
       min: 1,
       precision: 1
     },
     {
       type: "field_checkbox",
-      name: "R",
+      name: this.argMap.R,
       checked: "FALSE"
     },
     {
@@ -229,22 +237,24 @@ export const streamBDef: BlocklyBlockDefinition = {
     },
     {
       type: "input_value",
-      name: "E",
+      name: this.argMap.E,
       check: "TydiEl"
     },
     {
       type: "input_value",
-      name: "U",
+      name: this.argMap.U,
       check: "TydiEl"
     }
-  ],
-  output: [
+  ]
+  output = [
     "TydiStream",
     "TydiEl"
-  ],
-  colour: 0,
-  inputsInline: false
-};
+  ]
+  colour = 0
+  inputsInline = false
+}
+
+export const streamBDef = new StreamBDef();
 
 export const stringStreamBArgs = {
   C: "C",
@@ -253,16 +263,16 @@ export const stringStreamBArgs = {
   R: "R"
 };
 
-export const stringStreamBDef: BlocklyBlockDefinition = {
-  type: "string_stream_def",
-  tooltip: "Place a string stream",
-  helpUrl: "",
-  message0: "String stream c: %1 d: %2 n: %3 r: %4",
-  argMap: streamBArgs,
-  args0: [
+class StringStreamBDef implements BlocklyBlockDefinition {
+  type = "string_stream_def"
+  tooltip = "Place a string stream"
+  helpUrl = ""
+  message0 = "String stream c: %1 d: %2 n: %3 r: %4"
+  argMap = streamBArgs
+  args0: BlocklyBlockArg[] = [
     {
       type: "field_number",
-      name: "C",
+      name: this.argMap.C,
       value: 8,
       min: 1,
       max: 8,
@@ -270,57 +280,61 @@ export const stringStreamBDef: BlocklyBlockDefinition = {
     },
     {
       type: "field_number",
-      name: "D",
+      name: this.argMap.D,
       value: 1,
       min: 1,
       precision: 1
     },
     {
       type: "field_number",
-      name: "N",
+      name: this.argMap.N,
       value: 1,
       min: 1,
       precision: 1
     },
     {
       type: "field_checkbox",
-      name: "R",
+      name: this.argMap.R,
       checked: "FALSE"
     },
-  ],
-  output: [
+  ]
+  output = [
     "TydiStream",
     "TydiEl"
-  ],
-  colour: 0,
-  inputsInline: false
-};
+  ]
+  colour = 0
+  inputsInline = false
+}
+
+export const stringStreamBDef = new StringStreamBDef()
 
 export const streamletBArgs = {
   NAME: "NAME",
   STREAM: "STREAM"
 };
 
-export const streamletBDef = {
-  type: "streamlet",
-  tooltip: "Creates a streamlet that accepts streams",
-  helpUrl: "",
-  message0: "Streamlet %1 , stream: %2",
-  argMapping: streamletBArgs,
-  args0: [
+class StreamletBDef implements BlocklyBlockDefinition {
+  type = "streamlet"
+  tooltip = "Creates a streamlet that accepts streams"
+  helpUrl = ""
+  message0 = "Streamlet %1 , stream: %2"
+  argMap = streamletBArgs
+  args0: BlocklyBlockArg[] = [
     {
       type: "field_input",
-      name: "NAME",
+      name: this.argMap.NAME,
       text: "MyStreamlet"
     },
     {
       type: "input_value",
-      name: "STREAM",
+      name: this.argMap.STREAM,
       check: "TydiStream"
     }
-  ],
-  colour: 180
-};
+  ]
+  colour = 180
+}
+
+export const streamletBDef = new StreamletBDef()
 
 Blockly.defineBlocksWithJsonArray([
   streamletBDef,

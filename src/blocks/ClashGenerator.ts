@@ -1,12 +1,12 @@
 import * as Blockly from 'blockly'
 import {
-  bitBArgs, bitBDef,
-  groupBArgs, groupBDef,
-  memberBArgs, memberBDef,
-  streamBArgs, streamBDef,
-  streamletBArgs, streamletBDef,
-  stringStreamBArgs, stringStreamBDef,
-  unionBArgs, unionBDef
+  bitBDef,
+  groupBDef,
+  memberBDef,
+  streamBDef,
+  streamletBDef,
+  stringStreamBDef,
+  unionBDef
 } from "@/blocks/dslBlocks.ts";
 import {chiselGenerator} from "@/blocks/ChiselGenerator.ts";
 
@@ -45,44 +45,44 @@ const Order = {
 };
 
 clashGenerator.forBlock[streamletBDef.type] = function (block, generator) {
-  const name = block.getFieldValue(streamletBArgs.NAME)
-  const stream = generator.valueToCode(block, streamletBArgs.STREAM, Order.ATOMIC);
+  const name = block.getFieldValue(streamletBDef.argMap.NAME)
+  const stream = generator.valueToCode(block, streamletBDef.argMap.STREAM, Order.ATOMIC);
   return ""+
 `${name} :: () -> ${stream}`
 }
 
 clashGenerator.forBlock[streamBDef.type] = function (block, generator) {
-  const name = block.getFieldValue(streamBArgs.NAME)
-  const c = block.getFieldValue(streamBArgs.C)
-  const d = block.getFieldValue(streamBArgs.D)
-  const n = block.getFieldValue(streamBArgs.N)
-  const r = (block.getFieldValue(streamBArgs.R) === 'TRUE') ? 'true' : 'false';
-  const e = generator.valueToCode(block, streamBArgs.E, Order.ATOMIC)
-  const u = generator.valueToCode(block, streamBArgs.U, Order.ATOMIC)
+  const name = block.getFieldValue(streamBDef.argMap.NAME)
+  const c = block.getFieldValue(streamBDef.argMap.C)
+  const d = block.getFieldValue(streamBDef.argMap.D)
+  const n = block.getFieldValue(streamBDef.argMap.N)
+  const r = (block.getFieldValue(streamBDef.argMap.R) === 'TRUE') ? 'true' : 'false';
+  const e = generator.valueToCode(block, streamBDef.argMap.E, Order.ATOMIC)
+  const u = generator.valueToCode(block, streamBDef.argMap.U, Order.ATOMIC)
   const definition = `type ${name} = TydiSynth New (C ${c}) (D ${d}) (N ${n}) ${u} ${e}`
   definitions.push(definition)
   return [`${name}`, Order.ATOMIC]
 }
 
 clashGenerator.forBlock[stringStreamBDef.type] = function (block, generator) {
-  const c = block.getFieldValue(stringStreamBArgs.C)
-  const d = block.getFieldValue(stringStreamBArgs.D)
-  const n = block.getFieldValue(stringStreamBArgs.N)
-  const r = (block.getFieldValue(stringStreamBArgs.R) === 'TRUE') ? 'true' : 'false';
+  const c = block.getFieldValue(stringStreamBDef.argMap.C)
+  const d = block.getFieldValue(stringStreamBDef.argMap.D)
+  const n = block.getFieldValue(stringStreamBDef.argMap.N)
+  const r = (block.getFieldValue(stringStreamBDef.argMap.R) === 'TRUE') ? 'true' : 'false';
   return [`StringStream (C ${c}) (D ${d}) (N ${n})`, Order.ATOMIC]
 }
 
 clashGenerator.forBlock[groupBDef.type] = function (block, generator) {
-  const name = block.getFieldValue(groupBArgs.NAME)
-  const fields = generator.statementToCode(block, groupBArgs.FIELDS)
+  const name = block.getFieldValue(groupBDef.argMap.NAME)
+  const fields = generator.statementToCode(block, groupBDef.argMap.FIELDS)
   const definition = `type ${name} = Group (\n${fields}\n)`
   definitions.push(definition)
   return [`${name}`, Order.ATOMIC]
 }
 
 clashGenerator.forBlock[unionBDef.type] = function (block, generator) {
-  const name = block.getFieldValue(unionBArgs.NAME)
-  const fields = generator.statementToCode(block, unionBArgs.FIELDS)
+  const name = block.getFieldValue(unionBDef.argMap.NAME)
+  const fields = generator.statementToCode(block, unionBDef.argMap.FIELDS)
   const nFields = fields.split('\n').length
   const definition = `type ${name} = Union (\n${fields}\n)`
   definitions.push(definition)
@@ -90,13 +90,13 @@ clashGenerator.forBlock[unionBDef.type] = function (block, generator) {
 }
 
 clashGenerator.forBlock[bitBDef.type] = function (block) {
-  const width = block.getFieldValue(bitBArgs.WIDTH)
+  const width = block.getFieldValue(bitBDef.argMap.WIDTH)
   return [`Unsigned ${width}`, Order.ATOMIC]
 }
 
 clashGenerator.forBlock[memberBDef.type] = function (block, generator) {
-  const name = block.getFieldValue(memberBArgs.MEMBER_NAME)
-  const value = generator.valueToCode(block,memberBArgs.MEMBER_VALUE, Order.ATOMIC)
+  const name = block.getFieldValue(memberBDef.argMap.MEMBER_NAME)
+  const value = generator.valueToCode(block,memberBDef.argMap.MEMBER_VALUE, Order.ATOMIC)
   return `${name} >:: ${value}`
 }
 
