@@ -1,6 +1,6 @@
 <template>
   <DataImport @schema-update="processSchema" />
-  <BlocklyCanvas ref="blockly" />
+  <BlocklyCanvas @schema-update="tydiSchemaUpdate" ref="blockly" />
 <!--  <stream-simulator />-->
 </template>
 
@@ -19,10 +19,11 @@ import {
   streamBArgs, streamBDef,
   streamletBArgs, stringStreamBDef, unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
+import type {TydiStreamlet} from "@/TydiTypes.ts";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
-const schema = ref<any>(null)
 const blockly = ref<typeof BlocklyCanvas>()
+const tydiSchema = ref<TydiStreamlet[]>([])
 
 /**
  * Converts a snake_case string to camelCase.
@@ -168,6 +169,10 @@ function processSchema(schema: any) {
         return nullBlock
     }
   }
+}
+
+function tydiSchemaUpdate(structures: TydiStreamlet[]) {
+  tydiSchema.value = structures
 }
 
 </script>

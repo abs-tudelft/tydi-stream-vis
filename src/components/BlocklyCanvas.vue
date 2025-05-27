@@ -21,7 +21,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import {onMounted, ref} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
@@ -31,6 +31,10 @@ import {generateTLCode} from "@/blocks/tlGenerator";
 import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
+import {bitBDef, groupBDef, streamBDef, streamletBDef} from "@/blocks/dslBlocks.ts";
+import {TydiBits, TydiEl, TydiGroup, TydiStream, TydiStreamlet} from "@/TydiTypes.ts";
+
+const emit = defineEmits(['schema-update'])
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
@@ -90,6 +94,21 @@ function updateCode(event: any) {
   console.log(_tlCode);
 }
 
+function updateStructure(event: any) {
+  let _workspace = workspace.value!;
+  if (_workspace.isDragging()) return; // Don't update while changes are happening.
+  if (!supportedEvents.has(event.type)) return;
+
+  const topBlocks = _workspace.getTopBlocks(false)
+  const structures: TydiStreamlet[] = []
+  for (let topBlock of topBlocks) {
+    if (topBlock.type !== streamletBDef.type) continue
+    structures.push(TydiStreamlet.fromBlock(topBlock))
+  }
+  console.log(structures)
+  emit("schema-update", structures)
+}
+
 onMounted(() => {
   if (!blocklyDiv.value) {
     return;
@@ -110,6 +129,7 @@ onMounted(() => {
   })
 
   workspace.value.addChangeListener(updateCode);
+  workspace.value.addChangeListener(updateStructure);
 })
 </script>
 

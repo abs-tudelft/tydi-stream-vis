@@ -1,18 +1,55 @@
-class TydiEl {
+import * as Blockly from 'blockly/core'
+import {
+    bitBDef,
+    groupBDef,
+    memberBDef,
+    streamBDef,
+    streamletBDef,
+    stringStreamBDef,
+    unionBDef
+} from "@/blocks/dslBlocks.ts";
+
+export abstract class TydiEl {
     isStream: boolean = false
+
+    static fromBlock(block: Blockly.Block): TydiEl {
+        switch (block.type) {
+            case streamBDef.type:
+                return TydiStream.fromBlock(block)
+            case stringStreamBDef.type:
+                return TydiStringStream.fromBlock(block)
+            case groupBDef.type:
+                return TydiGroup.fromBlock(block)
+            case unionBDef.type:
+                return TydiUnion.fromBlock(block)
+            case bitBDef.type:
+                return TydiBits.fromBlock(block)
+            case 'logic_null':
+                return new TydiNull()
+        }
+        return new TydiNull()
+    }
 }
 
-class TydiBits extends TydiEl {
+export class TydiBits extends TydiEl {
     public width: number
     constructor(width: number) {
         super();
         this.width = Math.round(width);
     }
+
+    static fromBlock(block: Blockly.Block): TydiBits {
+        if (block.type !== bitBDef.type) {
+            throw new Error(`Expected block of type ${bitBDef.type}, got ${block.type}`)
+        }
+        const bitWidth = block.getFieldValue(bitBDef.argMap.WIDTH)
+        return new TydiBits(bitWidth)
+    }
 }
 
-class TydiNull extends TydiEl {}
+export class TydiNull extends TydiEl {}
 
-class TydiGroup extends TydiEl {
+export class TydiGroup extends TydiEl {
     public name: String
     public items: Record<string, TydiEl>
 
@@ -21,34 +58,137 @@ class TydiGroup extends TydiEl {
         this.name = name;
         this.items = items;
     }
-}
 
-class TydiUnion extends TydiGroup {
-    constructor(name: String, items: Record<string, TydiEl>) {
-        super(name, items);
+    static fromBlock(block: Blockly.Block): TydiGroup {
+        if (block.type !== groupBDef.type) {
+            throw new Error(`Expected block of type ${groupBDef.type}, got ${block.type}`)
+        }
+        const groupName = block.getFieldValue(groupBDef.argMap.NAME);
+        const memberItems: Record<string, TydiEl> = {}
+
+        const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
+        if (!firstMemberBlock) {
+            return new TydiGroup(groupName, memberItems)
+        }
+
+        const memberBlocks: Blockly.Block[] = [firstMemberBlock]
+        let memberBlock = firstMemberBlock
+        while (memberBlock.getNextBlock()) {
+            memberBlock = memberBlock.getNextBlock()!
+            memberBlocks.push(memberBlock)
+        }
+
+        for (let memberBlock of memberBlocks) {
+            const memberName = memberBlock.getFieldValue(memberBDef.argMap.MEMBER_NAME)
+            const memberItem = memberBlock.getInputTargetBlock(memberBDef.argMap.MEMBER_VALUE)
+            memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
+        }
+        return new TydiGroup(groupName, memberItems)
     }
 }
 
-class TydiStream extends TydiEl {
+export class TydiUnion extends TydiGroup {
+    constructor(name: String, items: Record<string, TydiEl>) {
+        super(name, items);
+    }
+
+    static fromBlock(block: Blockly.Block): TydiUnion {
+        if (block.type !== unionBDef.type) {
+            throw new Error(`Expected block of type ${unionBDef.type}, got ${block.type}`)
+        }
+        const unionName = block.getFieldValue(unionBDef.argMap.NAME);
+        const memberItems: Record<string, TydiEl> = {}
+
+        const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
+        if (!firstMemberBlock) {
+            return new TydiGroup(unionName, memberItems)
+        }
+
+        const memberBlocks: Blockly.Block[] = [firstMemberBlock]
+        let memberBlock = firstMemberBlock
+        while (memberBlock.getNextBlock()) {
+            memberBlock = memberBlock.getNextBlock()!
+            memberBlocks.push(memberBlock)
+        }
+
+        for (let memberBlock of memberBlocks) {
+            const memberName = memberBlock.getFieldValue(memberBDef.argMap.MEMBER_NAME)
+            const memberItem = memberBlock.getInputTargetBlock(memberBDef.argMap.MEMBER_VALUE)
+            memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
+        }
+        return new TydiUnion(unionName, memberItems)
+    }
+}
+
+export class TydiStream extends TydiEl {
     isStream = true
+    name: String
     e: TydiEl
     n: number
     d: number
     c: number
     u: TydiEl
 
-    constructor(e: TydiEl, n: number, d: number, c: number, u: TydiEl = new TydiNull()) {
+    constructor(name: String, e: TydiEl, n: number, d: number, c: number, u: TydiEl = new TydiNull()) {
         super();
+        this.name = name;
         this.e = e;
         this.n = Math.round(n);
         this.d = Math.round(d);
         this.c = Math.round(c);
         this.u = u;
     }
+
+    static fromBlock(block: Blockly.Block): TydiStream {
+        if (block.type !== streamBDef.type) {
+            throw new Error(`Expected block of type ${streamBDef.type}, got ${block.type}`)
+        }
+        const streamName = block.getFieldValue(streamBDef.argMap.NAME);
+        const n = block.getFieldValue(streamBDef.argMap.N)
+        const d = block.getFieldValue(streamBDef.argMap.D)
+        const c = block.getFieldValue(streamBDef.argMap.C)
+        const itemBlock = block.getInputTargetBlock(streamBDef.argMap.E)
+        const item = itemBlock ? TydiEl.fromBlock(itemBlock) : new TydiNull()
+        const userBlock = block.getInputTargetBlock(streamBDef.argMap.U)
+        const user = userBlock ? TydiEl.fromBlock(userBlock) : new TydiNull()
+        return new TydiStream(streamName, item, n, d, c, user)
+    }
 }
 
-class TydiStringStream extends TydiStream {
-    constructor(n: number, d: number, c: number) {
-        super(new TydiBits(8), n, d, c);
+export class TydiStringStream extends TydiStream {
+    constructor(name: String, n: number, d: number, c: number) {
+        super(name, new TydiBits(8), n, d, c);
+    }
+
+    static fromBlock(block: Blockly.Block): TydiStream {
+        const streamName = block.getFieldValue(streamBDef.argMap.NAME);
+        const n = block.getFieldValue(streamBDef.argMap.N)
+        const d = block.getFieldValue(streamBDef.argMap.D)
+        const c = block.getFieldValue(streamBDef.argMap.C)
+        return new TydiStringStream(streamName, n, d, c);
+    }
+}
+
+export class TydiStreamlet {
+    name: String
+    streams: TydiStream[]
+
+    constructor(name: String, streams: TydiStream[] = []) {
+        this.name = name;
+        this.streams = streams;
+    }
+
+    static fromBlock(block: Blockly.Block): TydiStreamlet {
+        const name = block.getFieldValue(streamletBDef.argMap.NAME);
+        const streamBlock = block.getInputTargetBlock(streamletBDef.argMap.STREAM);
+        let streams: TydiStream[] = []
+        if (!streamBlock || ![streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
+            return new TydiStreamlet(name, streams)
+        }
+        const stream = TydiEl.fromBlock(streamBlock)
+        if (stream instanceof TydiStream) {
+            streams.push(stream)
+        }
+        return new TydiStreamlet(name, streams)
     }
 }
