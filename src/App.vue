@@ -19,7 +19,7 @@ import {
   streamBArgs, streamBDef,
   streamletBArgs, stringStreamBDef, unionBArgs, unionBDef
 } from "@/blocks/dslBlocks.ts";
-import type {TydiStreamlet} from "@/TydiTypes.ts";
+import type {TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const blockly = ref<typeof BlocklyCanvas>()

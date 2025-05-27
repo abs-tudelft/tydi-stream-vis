@@ -2,6 +2,12 @@
   <div>
     <div ref="blocklyDiv" style="height: 70vh"></div>
 
+    <div class="text-center mt-3">
+      <span class="my-2 block">Represents:</span>
+      <div v-for="structure in tydiStructures">
+        <code class="bg-amber-50 rounded p-2 inline-block">{{structure.streams[0].repr()}}</code>
+      </div>
+    </div>
     <div class="flex flex-col justify-center items-center">
       <div class="my-4 flex space-x-4">
         <button @click="blocklySave" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
@@ -32,7 +38,7 @@ import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {bitBDef, groupBDef, streamBDef, streamletBDef} from "@/blocks/dslBlocks.ts";
-import {TydiBits, TydiEl, TydiGroup, TydiStream, TydiStreamlet} from "@/TydiTypes.ts";
+import {TydiBits, TydiEl, TydiGroup, TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 
 const emit = defineEmits(['schema-update'])
 
@@ -41,6 +47,8 @@ const workspace = ref<Blockly.WorkspaceSvg | null>(null)
 const tlCode = ref('// Start by creating a data structure')
 const chiselCode = ref('// Start by creating a data structure')
 const clashCode = ref('-- Start by creating a data structure')
+
+const tydiStructures = ref<TydiStreamlet[]>([])
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -105,7 +113,7 @@ function updateStructure(event: any) {
     if (topBlock.type !== streamletBDef.type) continue
     structures.push(TydiStreamlet.fromBlock(topBlock))
   }
-  console.log(structures)
+  tydiStructures.value = structures
   emit("schema-update", structures)
 }
 

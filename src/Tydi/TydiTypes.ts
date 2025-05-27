@@ -29,6 +29,8 @@ export abstract class TydiEl {
         }
         return new TydiNull()
     }
+
+    abstract repr(): String
 }
 
 export class TydiBits extends TydiEl {
@@ -45,9 +47,17 @@ export class TydiBits extends TydiEl {
         const bitWidth = block.getFieldValue(bitBDef.argMap.WIDTH)
         return new TydiBits(bitWidth)
     }
+
+    repr(): String {
+        return `Bits<${this.width}>`;
+    }
 }
 
-export class TydiNull extends TydiEl {}
+export class TydiNull extends TydiEl {
+    repr(): String {
+        return 'Null';
+    }
+}
 
 export class TydiGroup extends TydiEl {
     public name: String
@@ -85,6 +95,11 @@ export class TydiGroup extends TydiEl {
         }
         return new TydiGroup(groupName, memberItems)
     }
+
+    repr(): String {
+        const itemsRepr = Object.values(this.items).map(item => item.repr()).join(', ')
+        return `Group<${itemsRepr}>`;
+    }
 }
 
 export class TydiUnion extends TydiGroup {
@@ -117,6 +132,11 @@ export class TydiUnion extends TydiGroup {
             memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
         }
         return new TydiUnion(unionName, memberItems)
+    }
+
+    repr(): String {
+        const itemsRepr = Object.values(this.items).map(item => item.repr()).join(', ')
+        return `Union<${itemsRepr}>`;
     }
 }
 
@@ -152,6 +172,14 @@ export class TydiStream extends TydiEl {
         const userBlock = block.getInputTargetBlock(streamBDef.argMap.U)
         const user = userBlock ? TydiEl.fromBlock(userBlock) : new TydiNull()
         return new TydiStream(streamName, item, n, d, c, user)
+    }
+
+    repr(): String {
+        const eRepr = this.e.repr()
+        if (this.d <= 1) {
+            return `Stream<${eRepr}>`;
+        }
+        return `Stream{${this.d}}<${eRepr}>`;
     }
 }
 
