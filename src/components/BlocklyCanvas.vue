@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div ref="blocklyDiv" style="height: 70vh"></div>
+    <div ref="blocklyDiv" style="height: 80vh"></div>
 
     <div class="text-center mt-3">
       <span class="my-2 block">Represents:</span>
@@ -128,6 +128,10 @@ onMounted(() => {
       length: 3,
       colour: '#ccc',
       snap: true
+    },
+    scrollbars: true,
+    move: {
+      drag: true
     },
     zoom: {
       controls: true,
