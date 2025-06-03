@@ -11,8 +11,12 @@ import {
 
 export abstract class TydiEl {
     isStream: boolean = false
+    blockId: string | null = null
 
     static fromBlock(block: Blockly.Block): TydiEl {
+        const nullEl = new TydiNull()
+        nullEl.blockId = block.id
+
         switch (block.type) {
             case streamBDef.type:
                 return TydiStream.fromBlock(block)
@@ -25,9 +29,9 @@ export abstract class TydiEl {
             case bitBDef.type:
                 return TydiBits.fromBlock(block)
             case 'logic_null':
-                return new TydiNull()
+                return nullEl
         }
-        return new TydiNull()
+        return nullEl
     }
 
     abstract repr(): String
@@ -45,7 +49,9 @@ export class TydiBits extends TydiEl {
             throw new Error(`Expected block of type ${bitBDef.type}, got ${block.type}`)
         }
         const bitWidth = block.getFieldValue(bitBDef.argMap.WIDTH)
-        return new TydiBits(bitWidth)
+        const el = new TydiBits(bitWidth);
+        el.blockId = block.id
+        return el
     }
 
     repr(): String {
@@ -78,7 +84,9 @@ export class TydiGroup extends TydiEl {
 
         const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
         if (!firstMemberBlock) {
-            return new TydiGroup(groupName, memberItems)
+            const el = new TydiGroup(groupName, memberItems);
+            el.blockId = block.id
+            return el
         }
 
         const memberBlocks: Blockly.Block[] = [firstMemberBlock]
@@ -93,7 +101,9 @@ export class TydiGroup extends TydiEl {
             const memberItem = memberBlock.getInputTargetBlock(memberBDef.argMap.MEMBER_VALUE)
             memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
         }
-        return new TydiGroup(groupName, memberItems)
+        const el = new TydiGroup(groupName, memberItems);
+        el.blockId = block.id
+        return el
     }
 
     repr(): String {
@@ -116,7 +126,9 @@ export class TydiUnion extends TydiGroup {
 
         const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
         if (!firstMemberBlock) {
-            return new TydiGroup(unionName, memberItems)
+            const el = new TydiUnion(unionName, memberItems)
+            el.blockId = block.id
+            return el
         }
 
         const memberBlocks: Blockly.Block[] = [firstMemberBlock]
@@ -131,7 +143,9 @@ export class TydiUnion extends TydiGroup {
             const memberItem = memberBlock.getInputTargetBlock(memberBDef.argMap.MEMBER_VALUE)
             memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
         }
-        return new TydiUnion(unionName, memberItems)
+        const el = new TydiUnion(unionName, memberItems)
+        el.blockId = block.id
+        return el
     }
 
     repr(): String {
@@ -171,7 +185,9 @@ export class TydiStream extends TydiEl {
         const item = itemBlock ? TydiEl.fromBlock(itemBlock) : new TydiNull()
         const userBlock = block.getInputTargetBlock(streamBDef.argMap.U)
         const user = userBlock ? TydiEl.fromBlock(userBlock) : new TydiNull()
-        return new TydiStream(streamName, item, n, d, c, user)
+        const el = new TydiStream(streamName, item, n, d, c, user);
+        el.blockId = block.id
+        return el
     }
 
     repr(): String {
@@ -193,13 +209,16 @@ export class TydiStringStream extends TydiStream {
         const n = block.getFieldValue(streamBDef.argMap.N)
         const d = block.getFieldValue(streamBDef.argMap.D)
         const c = block.getFieldValue(streamBDef.argMap.C)
-        return new TydiStringStream(streamName, n, d, c);
+        const el = new TydiStringStream(streamName, n, d, c);
+        el.blockId = block.id
+        return el
     }
 }
 
 export class TydiStreamlet {
     name: String
     streams: TydiStream[]
+    blockId: string | null = null
 
     constructor(name: String, streams: TydiStream[] = []) {
         this.name = name;
@@ -210,13 +229,14 @@ export class TydiStreamlet {
         const name = block.getFieldValue(streamletBDef.argMap.NAME);
         const streamBlock = block.getInputTargetBlock(streamletBDef.argMap.STREAM);
         let streams: TydiStream[] = []
-        if (!streamBlock || ![streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
-            return new TydiStreamlet(name, streams)
+        if (streamBlock && [streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
+            const stream = TydiEl.fromBlock(streamBlock)
+            if (stream instanceof TydiStream) {
+                streams.push(stream)
+            }
         }
-        const stream = TydiEl.fromBlock(streamBlock)
-        if (stream instanceof TydiStream) {
-            streams.push(stream)
-        }
-        return new TydiStreamlet(name, streams)
+        const el = new TydiStreamlet(name, streams);
+        el.blockId = block.id
+        return el
     }
 }
