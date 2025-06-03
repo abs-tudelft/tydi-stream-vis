@@ -5,7 +5,7 @@
     <div class="text-center mt-3">
       <span class="my-2 block">Represents:</span>
       <div v-for="structure in tydiStructures">
-        <code class="bg-amber-50 rounded p-2 inline-block">{{structure.streams[0].repr()}}</code>
+        <code class="bg-amber-50 rounded p-2 inline-block" v-if="structure.streams.length">{{structure.streams[0].repr()}}</code>
       </div>
     </div>
     <div class="flex flex-col justify-center items-center">
@@ -37,8 +37,8 @@ import {generateTLCode} from "@/blocks/tlGenerator";
 import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
-import {bitBDef, groupBDef, streamBDef, streamletBDef} from "@/blocks/dslBlocks.ts";
-import {TydiBits, TydiEl, TydiGroup, TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+import {streamletBDef} from "@/blocks/dslBlocks.ts";
+import {TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 
 const emit = defineEmits(['schema-update'])
 
@@ -49,6 +49,9 @@ const chiselCode = ref('// Start by creating a data structure')
 const clashCode = ref('-- Start by creating a data structure')
 
 const tydiStructures = ref<TydiStreamlet[]>([])
+
+const selectedBlockType = ref<String | null>(null)
+const selectedPath = ref<String | null>(null)
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -117,6 +120,17 @@ function updateStructure(event: any) {
   emit("schema-update", structures)
 }
 
+function updateSelection(event: any) {
+  if (event.type !== Blockly.Events.SELECTED) return
+
+  const selected = Blockly.getSelected()
+  if (!selected) return;
+  // @ts-ignore
+  const selectedBlock: Blockly.BlockSvg = selected
+  selectedPath.value = selectedBlock.getFieldValue("MAPPING")
+  selectedBlockType.value = selectedBlock.type
+}
+
 onMounted(() => {
   if (!blocklyDiv.value) {
     return;
@@ -142,6 +156,7 @@ onMounted(() => {
 
   workspace.value.addChangeListener(updateCode);
   workspace.value.addChangeListener(updateStructure);
+  workspace.value.addChangeListener(updateSelection);
 })
 </script>
 
