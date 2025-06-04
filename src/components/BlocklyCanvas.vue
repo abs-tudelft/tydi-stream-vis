@@ -38,7 +38,7 @@ import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
-import {TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 
 const emit = defineEmits(['schema-update'])
 
@@ -49,6 +49,7 @@ const chiselCode = ref('// Start by creating a data structure')
 const clashCode = ref('-- Start by creating a data structure')
 
 const tydiStructures = ref<TydiStreamlet[]>([])
+const tydiSteams = ref<TydiStream[]>([])
 
 const selectedBlockType = ref<String | null>(null)
 const selectedPath = ref<String | null>(null)
@@ -118,6 +119,7 @@ function updateStructure(event: any) {
   }
   tydiStructures.value = structures
   emit("schema-update", structures)
+  tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
 
 function updateSelection(event: any) {
