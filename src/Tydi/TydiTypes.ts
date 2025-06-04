@@ -50,7 +50,7 @@ export abstract class TydiEl extends TydiExtendable {
     }
 
     getItemsFlat(): TydiEl[] {
-        return Object.values(this.getChildren()).flatMap(c => c.getItemsFlat())
+        return Object.values(this.getChildren()).filter(c => !c.isStream).flatMap(c => c.getItemsFlat())
     }
 
     static fromBlock(block: Blockly.Block): TydiEl {
@@ -310,6 +310,7 @@ export class TydiStringStream extends TydiStream {
         const c = block.getFieldValue(streamBDef.argMap.C)
         const el = new TydiStringStream(streamName, n, d, c);
         el.block = block
+        el.e.dataPath = el.dataPath
         return el
     }
 }
@@ -335,7 +336,7 @@ export class TydiStreamlet extends TydiExtendable {
         let streams: Record<string, TydiStream> = {}
         if (streamBlock && [streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
             const stream = TydiEl.fromBlock(streamBlock)
-            stream.dataPath = streamBlock.getFieldValue("MAPPING")
+            stream.dataPath = streamBlock.getFieldValue("MAPPING") ?? "root"
             stream.setPath("root")
             // TODO for now we only have one stream so this is fine
             if (stream instanceof TydiStream) {
