@@ -25,6 +25,24 @@ export abstract class TydiEl extends TydiExtendable {
 
     setPath(path: string) {
         this.tydiPath = path
+        for (let [key, item] of Object.entries(this.getChildren())) {
+            item.setPath(`${path}.${key}`)
+        }
+    }
+
+    findStreams(): TydiStream[] {
+        let streams: TydiStream[] = []
+        for (let [key, item] of Object.entries(this.getChildren())) {
+            streams.push(... item.findStreams())
+        }
+        if (this instanceof TydiStream) {
+            streams = [this, ...streams]
+        }
+        return streams
+    }
+
+    getChildren(): Record<string, TydiEl> {
+        return {}
     }
 
     static fromBlock(block: Blockly.Block): TydiEl {
@@ -92,11 +110,8 @@ export class TydiGroup extends TydiEl {
         }
     }
 
-    setPath(path: string) {
-        super.setPath(path)
-        for (let [key, item] of Object.entries(this.items)) {
-            item.setPath(`${path}.${key}`)
-        }
+    getChildren(): Record<string, TydiEl> {
+        return this.items
     }
 
     static fromBlock(block: Blockly.Block): TydiGroup {
@@ -199,10 +214,11 @@ export class TydiStream extends TydiEl {
         this.u.parent = this
     }
 
-    setPath(path: string) {
-        super.setPath(path)
-        this.e.setPath(`${path}.e`)
-        this.u.setPath(`${path}.u`)
+    getChildren(): Record<string, TydiEl> {
+        return {
+            e: this.e,
+            u: this.u,
+        }
     }
 
     static fromBlock(block: Blockly.Block): TydiStream {
