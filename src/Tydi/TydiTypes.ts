@@ -17,6 +17,10 @@ abstract class TydiExtendable {
     }
     dataPath: string | null = null
     tydiPath: string | null = null
+
+    getChildren(): Record<string, TydiEl> {
+        return {}
+    }
 }
 
 export abstract class TydiEl extends TydiExtendable {
@@ -39,10 +43,6 @@ export abstract class TydiEl extends TydiExtendable {
             streams = [this, ...streams]
         }
         return streams
-    }
-
-    getChildren(): Record<string, TydiEl> {
-        return {}
     }
 
     static fromBlock(block: Blockly.Block): TydiEl {
@@ -265,25 +265,30 @@ export class TydiStringStream extends TydiStream {
 
 export class TydiStreamlet extends TydiExtendable {
     name: String
-    streams: TydiStream[]
+    streams: Record<string, TydiStream>
 
-    constructor(name: String, streams: TydiStream[] = []) {
+    constructor(name: String, streams: Record<string, TydiStream> = {}) {
         super();
         this.name = name;
         this.streams = streams;
-        this.streams.forEach((stream: TydiStream) => { stream.parent = this })
+        Object.values(this.streams).forEach((stream: TydiStream) => { stream.parent = this })
+    }
+
+    getChildren(): Record<string, TydiStream> {
+        return this.streams
     }
 
     static fromBlock(block: Blockly.Block): TydiStreamlet {
         const name = block.getFieldValue(streamletBDef.argMap.NAME);
         const streamBlock = block.getInputTargetBlock(streamletBDef.argMap.STREAM);
-        let streams: TydiStream[] = []
+        let streams: Record<string, TydiStream> = {}
         if (streamBlock && [streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
             const stream = TydiEl.fromBlock(streamBlock)
             stream.dataPath = streamBlock.getFieldValue("MAPPING")
             stream.setPath("root")
+            // TODO for now we only have one stream so this is fine
             if (stream instanceof TydiStream) {
-                streams.push(stream)
+                streams["stream"] = stream
             }
         }
         const el = new TydiStreamlet(name, streams);
