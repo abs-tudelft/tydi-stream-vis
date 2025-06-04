@@ -9,9 +9,15 @@ import {
     unionBDef
 } from "@/blocks/dslBlocks.ts";
 
-export abstract class TydiEl {
-    isStream: boolean = false
+abstract class TydiExtendable {
     blockId: string | null = null
+    dataPath: string | null = null
+    tydiPath: string | null = null
+}
+
+export abstract class TydiEl extends TydiExtendable {
+    isStream: boolean = false
+    parent: TydiEl | TydiStreamlet | null = null
 
     static fromBlock(block: Blockly.Block): TydiEl {
         const nullEl = new TydiNull()
@@ -73,6 +79,9 @@ export class TydiGroup extends TydiEl {
         super();
         this.name = name;
         this.items = items;
+        for (let item of Object.values(this.items)) {
+            item.parent = this
+        }
     }
 
     static fromBlock(block: Blockly.Block): TydiGroup {
@@ -167,10 +176,12 @@ export class TydiStream extends TydiEl {
         super();
         this.name = name;
         this.e = e;
+        this.e.parent = this
         this.n = Math.round(n);
         this.d = Math.round(d);
         this.c = Math.round(c);
         this.u = u;
+        this.u.parent = this
     }
 
     static fromBlock(block: Blockly.Block): TydiStream {
@@ -215,14 +226,15 @@ export class TydiStringStream extends TydiStream {
     }
 }
 
-export class TydiStreamlet {
+export class TydiStreamlet extends TydiExtendable {
     name: String
     streams: TydiStream[]
-    blockId: string | null = null
 
     constructor(name: String, streams: TydiStream[] = []) {
+        super();
         this.name = name;
         this.streams = streams;
+        this.streams.forEach((stream: TydiStream) => { stream.parent = this })
     }
 
     static fromBlock(block: Blockly.Block): TydiStreamlet {
@@ -231,6 +243,8 @@ export class TydiStreamlet {
         let streams: TydiStream[] = []
         if (streamBlock && [streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
             const stream = TydiEl.fromBlock(streamBlock)
+            stream.dataPath = streamBlock.getFieldValue("MAPPING")
+            stream.tydiPath = "root"
             if (stream instanceof TydiStream) {
                 streams.push(stream)
             }
