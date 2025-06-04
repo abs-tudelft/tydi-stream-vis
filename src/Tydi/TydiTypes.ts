@@ -23,6 +23,10 @@ export abstract class TydiEl extends TydiExtendable {
     isStream: boolean = false
     parent: TydiEl | TydiStreamlet | null = null
 
+    setPath(path: string) {
+        this.tydiPath = path
+    }
+
     static fromBlock(block: Blockly.Block): TydiEl {
         const nullEl = new TydiNull()
         nullEl.block = block
@@ -85,6 +89,13 @@ export class TydiGroup extends TydiEl {
         this.items = items;
         for (let item of Object.values(this.items)) {
             item.parent = this
+        }
+    }
+
+    setPath(path: string) {
+        super.setPath(path)
+        for (let [key, item] of Object.entries(this.items)) {
+            item.setPath(`${path}.${key}`)
         }
     }
 
@@ -188,6 +199,12 @@ export class TydiStream extends TydiEl {
         this.u.parent = this
     }
 
+    setPath(path: string) {
+        super.setPath(path)
+        this.e.setPath(`${path}.e`)
+        this.u.setPath(`${path}.u`)
+    }
+
     static fromBlock(block: Blockly.Block): TydiStream {
         if (block.type !== streamBDef.type) {
             throw new Error(`Expected block of type ${streamBDef.type}, got ${block.type}`)
@@ -248,7 +265,7 @@ export class TydiStreamlet extends TydiExtendable {
         if (streamBlock && [streamBDef.type, stringStreamBDef.type].includes(streamBlock.type)) {
             const stream = TydiEl.fromBlock(streamBlock)
             stream.dataPath = streamBlock.getFieldValue("MAPPING")
-            stream.tydiPath = "root"
+            stream.setPath("root")
             if (stream instanceof TydiStream) {
                 streams.push(stream)
             }
