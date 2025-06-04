@@ -45,6 +45,14 @@ export abstract class TydiEl extends TydiExtendable {
         return streams
     }
 
+    get width(): number {
+        return Object.values(this.getChildren()).reduce((acc, cur) => acc + cur.width, 0);
+    }
+
+    getItemsFlat(): TydiEl[] {
+        return Object.values(this.getChildren()).flatMap(c => c.getItemsFlat())
+    }
+
     static fromBlock(block: Blockly.Block): TydiEl {
         const nullEl = new TydiNull()
         nullEl.block = block
@@ -70,10 +78,19 @@ export abstract class TydiEl extends TydiExtendable {
 }
 
 export class TydiBits extends TydiEl {
-    public width: number
+    public _width: number
     constructor(width: number) {
         super();
-        this.width = Math.round(width);
+        this._width = Math.round(width);
+    }
+
+    // This is a getter because it overloads the method of TydiEl
+    get width(): number {
+        return this._width;
+    }
+
+    getItemsFlat(): TydiEl[] {
+        return [this]
     }
 
     static fromBlock(block: Blockly.Block): TydiBits {
@@ -108,6 +125,10 @@ export class TydiGroup extends TydiEl {
         for (let item of Object.values(this.items)) {
             item.parent = this
         }
+    }
+
+    get numItems(): number {
+        return Object.values(this.items).length
     }
 
     getChildren(): Record<string, TydiEl> {
@@ -154,6 +175,36 @@ export class TydiGroup extends TydiEl {
 export class TydiUnion extends TydiGroup {
     constructor(name: String, items: Record<string, TydiEl>) {
         super(name, items);
+    }
+
+    get tagWidth(): number {
+        return Math.ceil(Math.log2(this.numItems))
+    }
+
+    /// Finds the maximum bitWidth of the children
+    get unionWidth(): number {
+        const tydiEls = Object.values(this.getChildren()).filter(c => !c.isStream);
+        // The following is shorter, but all the arguments go on the stack. Does this matter with our small objects? Not really I suppose.
+        // return Math.max(... tydiEls.map(o => o.width))
+        return tydiEls.reduce((acc, cur) => Math.max(acc, cur.width), 0);
+    }
+
+    get width(): number {
+        return this.unionWidth + this.tagWidth
+    }
+
+    getItemsFlat(): TydiEl[] {
+        const union = new TydiBits(this.unionWidth)
+        union.tydiPath = `${this.tydiPath}.union`
+        union.dataPath = `${this.dataPath}:data`
+        // Todo: The block the union corresponds to is dynamic. Not sure how to handle.
+        const tag = new TydiBits(this.tagWidth)
+        tag.tydiPath = `${this.tydiPath}.tag`
+        tag.dataPath = `${this.dataPath}:type`
+        if (this._block) {
+            tag.block = this._block
+        }
+        return [tag, union]
     }
 
     static fromBlock(block: Blockly.Block): TydiUnion {
