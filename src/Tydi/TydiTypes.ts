@@ -10,7 +10,11 @@ import {
 } from "@/blocks/dslBlocks.ts";
 
 abstract class TydiExtendable {
-    blockId: string | null = null
+    _block: Blockly.Block | null = null
+    set block(block: Blockly.Block) {
+        this._block = block
+        this.dataPath = this._block.getFieldValue("MAPPING")
+    }
     dataPath: string | null = null
     tydiPath: string | null = null
 }
@@ -21,7 +25,7 @@ export abstract class TydiEl extends TydiExtendable {
 
     static fromBlock(block: Blockly.Block): TydiEl {
         const nullEl = new TydiNull()
-        nullEl.blockId = block.id
+        nullEl.block = block
 
         switch (block.type) {
             case streamBDef.type:
@@ -56,7 +60,7 @@ export class TydiBits extends TydiEl {
         }
         const bitWidth = block.getFieldValue(bitBDef.argMap.WIDTH)
         const el = new TydiBits(bitWidth);
-        el.blockId = block.id
+        el.block = block
         return el
     }
 
@@ -94,7 +98,7 @@ export class TydiGroup extends TydiEl {
         const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
         if (!firstMemberBlock) {
             const el = new TydiGroup(groupName, memberItems);
-            el.blockId = block.id
+            el.block = block
             return el
         }
 
@@ -111,7 +115,7 @@ export class TydiGroup extends TydiEl {
             memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
         }
         const el = new TydiGroup(groupName, memberItems);
-        el.blockId = block.id
+        el.block = block
         return el
     }
 
@@ -136,7 +140,7 @@ export class TydiUnion extends TydiGroup {
         const firstMemberBlock = block.getInputTargetBlock(groupBDef.argMap.FIELDS)
         if (!firstMemberBlock) {
             const el = new TydiUnion(unionName, memberItems)
-            el.blockId = block.id
+            el.block = block
             return el
         }
 
@@ -153,7 +157,7 @@ export class TydiUnion extends TydiGroup {
             memberItems[memberName] = memberItem ? TydiEl.fromBlock(memberItem) : new TydiNull()
         }
         const el = new TydiUnion(unionName, memberItems)
-        el.blockId = block.id
+        el.block = block
         return el
     }
 
@@ -197,7 +201,7 @@ export class TydiStream extends TydiEl {
         const userBlock = block.getInputTargetBlock(streamBDef.argMap.U)
         const user = userBlock ? TydiEl.fromBlock(userBlock) : new TydiNull()
         const el = new TydiStream(streamName, item, n, d, c, user);
-        el.blockId = block.id
+        el.block = block
         return el
     }
 
@@ -221,7 +225,7 @@ export class TydiStringStream extends TydiStream {
         const d = block.getFieldValue(streamBDef.argMap.D)
         const c = block.getFieldValue(streamBDef.argMap.C)
         const el = new TydiStringStream(streamName, n, d, c);
-        el.blockId = block.id
+        el.block = block
         return el
     }
 }
@@ -250,7 +254,7 @@ export class TydiStreamlet extends TydiExtendable {
             }
         }
         const el = new TydiStreamlet(name, streams);
-        el.blockId = block.id
+        el.block = block
         return el
     }
 }
