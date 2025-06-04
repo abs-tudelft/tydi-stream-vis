@@ -3,7 +3,8 @@ import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import {computed, ref} from "vue";
 
 const props = defineProps({
-  stream: TydiStream
+  stream: TydiStream,
+  inputData: Array,
 })
 
 const physicalStreams = computed(() => {

@@ -1,7 +1,7 @@
 <template>
-  <DataImport @schema-update="processSchema" />
+  <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" />
   <BlocklyCanvas @schema-update="tydiSchemaUpdate" ref="blockly" />
-  <StreamVisualizer :stream="streamVisualized!" />
+  <StreamVisualizer :stream="streamVisualized!" :input-data="inputData" />
 <!--  <stream-simulator />-->
 </template>
 
@@ -25,6 +25,7 @@ import StreamVisualizer from "@/components/StreamVisualizer.vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const blockly = ref<typeof BlocklyCanvas>()
+const inputData = ref<any[]>([])
 const tydiSchema = ref<TydiStreamlet[]>([])
 const streamVisualized = ref<TydiStream | null>(null)
 
@@ -77,12 +78,7 @@ function processSchema(schema: any) {
   streamlet.moveBy(-(workspaceSize.width/2)+200, -(workspaceSize.height/2)+80)
   streamlet.setFieldValue('RootStreamlet', streamletBArgs.NAME)
 
-  const stream = workspace.newBlock(streamBDef.type)
-  stream.initSvg()
-  stream.setFieldValue('RootStream', streamBArgs.NAME)
-  streamlet.getInput("STREAM")?.connection!.connect(stream.outputConnection!)
-
-  processNode(schema, stream, stream.getInput(streamBArgs.E)?.connection!, "root")
+  processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "root")
 
   function mappingLabel(path: string) {
     return new Blockly.FieldLabel(path, "block-mapping-text")
