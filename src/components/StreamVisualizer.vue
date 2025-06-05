@@ -1,19 +1,53 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 
 const props = defineProps({
   stream: TydiStream,
   inputData: Array,
 })
 
+// watch(() => props.stream, () => {})
+
+const selectedIndexes = ref<number[]>([])
+
 const physicalStreams = computed(() => {
-  return props.stream?.findStreams()
+  const streams = props.stream?.findStreams();
+  selectedIndexes.value = new Array<number>(streams!.length).fill(0);
+  return streams
 })
 
 const firstStreamItems = computed(() => {
   if (physicalStreams.value === undefined) return []
   return physicalStreams.value[0].getItemsFlat
+})
+
+const relativePaths = computed(() => {
+  if (physicalStreams.value === undefined) return []
+  return physicalStreams.value.map(s => s.dataPath!.replace(s.parent!.dataPath!, ""))
+})
+
+function dataAccessor(path: string) {
+  const dataPath = path.split(":")[0]
+  let pointer: any | any[] = props.inputData!
+  // Split path and remove "root"
+  const pathSegments = dataPath.split('.').slice(1);
+  pathSegments.forEach(pathSegment => {
+    if (pointer instanceof Array) {
+      pointer = pointer[0] as any
+    }
+    pointer = pointer[pathSegment]
+  })
+  return pointer
+}
+
+const arrayLengths = computed(() => {
+  if (props.inputData === undefined) return []
+  let list: any[] = []
+  physicalStreams.value?.forEach(stream => {
+    list.push(dataAccessor(stream.dataPath!).length)
+  })
+  return list
 })
 
 </script>
@@ -28,6 +62,8 @@ const firstStreamItems = computed(() => {
       </template>
     </div>
   </template>
+  <div>{{arrayLengths}}</div>
+  <div>{{relativePaths}}</div>
 
 </template>
 
