@@ -1,7 +1,7 @@
 <template>
   <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" />
   <BlocklyCanvas @schema-update="tydiSchemaUpdate" ref="blockly" />
-  <StreamVisualizer :stream="streamVisualized!" :input-data="inputData" />
+  <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" />
 <!--  <stream-simulator />-->
 </template>
 

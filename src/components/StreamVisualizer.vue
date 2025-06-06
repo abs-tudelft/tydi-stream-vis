@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import {computed, ref, watch} from "vue";
+import * as jsonc from 'jsonc-parser';
 
 const props = defineProps({
   stream: TydiStream,
-  inputData: Array,
+  inputData: jsonc.Node,
 })
 
 // watch(() => props.stream, () => {})
@@ -29,7 +30,7 @@ const relativePaths = computed(() => {
 
 function dataAccessor(path: string) {
   const dataPath = path.split(":")[0]
-  let pointer: any | any[] = props.inputData!
+  let pointer: any | any[] = jsonc.getNodeValue(props.inputData!)
   // Split path and remove "root"
   const pathSegments = dataPath.split('.').slice(1);
   pathSegments.forEach(pathSegment => {

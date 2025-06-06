@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import * as jsonc from 'jsonc-parser';
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {computed, ref, watch} from "vue";
 import CodeEditor from "@/components/CodeEditor.vue";
@@ -16,8 +17,9 @@ const parsedData = computed(() => {
   let error = ''
   let parsed = null
   try {
-    parsed = JSON.parse(dataCode.value);
-    if (!Array.isArray(parsed)) {
+    parsed = jsonc.parseTree(dataCode.value);
+    if (parsed === undefined) error = "Error parsing tree";
+    if (parsed!.type !== "array") {
       error = "Root should be an array"
     }
   } catch (e: any) {
@@ -27,17 +29,17 @@ const parsedData = computed(() => {
     return { error: error }
   }
   emit('data-input', parsed)
-  return parsed
+  return parsed!
 })
 
 const schema = computed(() => {
-  if (parsedData.value === null) return null
+  if (parsedData.value === null || parsedData.value === undefined) return null
   if (parsedData.value.error) {
     return {
       error: parsedData.value.error
     }
   } else {
-    return generateSchema(parsedData.value)
+    return generateSchema(jsonc.getNodeValue(parsedData.value as jsonc.Node))
   }
 })
 
