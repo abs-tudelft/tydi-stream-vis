@@ -39,6 +39,7 @@ import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
 
 const emit = defineEmits(['schema-update', 'select'])
 
@@ -51,8 +52,8 @@ const clashCode = ref('-- Start by creating a data structure')
 const tydiStructures = ref<TydiStreamlet[]>([])
 const tydiSteams = ref<TydiStream[]>([])
 
-const selectedBlockType = ref<String | null>(null)
-const selectedPath = ref<String | null>(null)
+const selectedBlockType = ref<string | null>(null)
+const selectedPath = ref<string | null>(null)
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -130,9 +131,18 @@ function updateSelection(event: any) {
   // @ts-ignore
   const selectedBlock: Blockly.BlockSvg = selected
   selectedPath.value = selectedBlock.getFieldValue("MAPPING")
+  if (!selectedPath.value) return
+  const pathList = pathToList(selectedPath.value!)
+  const pathListToEmit = pathList.map(el => {
+    if (el instanceof ArrayIndex) {
+      return 0
+    } else {
+      return el.name
+    }
+  })
   selectedBlockType.value = selectedBlock.type
   console.log("Selected block with path", selectedPath.value)
-  emit("select", [0, "array_example", 2])
+  emit("select", pathListToEmit)
 }
 
 onMounted(() => {

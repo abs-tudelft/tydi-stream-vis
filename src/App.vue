@@ -84,7 +84,7 @@ function processSchema(schema: any) {
   streamlet.moveBy(-(workspaceSize.width/2)+200, -(workspaceSize.height/2)+80)
   streamlet.setFieldValue('RootStreamlet', streamletBArgs.NAME)
 
-  processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "root")
+  processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "")
 
   function mappingLabel(path: string) {
     return new Blockly.FieldLabel(path, "block-mapping-text")
@@ -164,7 +164,7 @@ function processSchema(schema: any) {
         streamBlock.setFieldValue(streamName, streamBArgs.NAME)
         parentConnection!.connect(streamBlock.outputConnection!)
         addMapping(streamBlock, path)
-        processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!, path)
+        processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!, `${path}[]`)
         return streamBlock
       case 'string':
         const stringStreamBlock = workspace.newBlock(stringStreamBDef.type)

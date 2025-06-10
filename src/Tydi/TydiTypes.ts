@@ -8,14 +8,19 @@ import {
     stringStreamBDef,
     unionBDef
 } from "@/blocks/dslBlocks.ts";
+import {pathToList, ObjectIndex, ArrayIndex} from "@/Tydi/utils.ts";
 
 abstract class TydiExtendable {
     _block: Blockly.Block | null = null
     set block(block: Blockly.Block) {
         this._block = block
         this.dataPath = this._block.getFieldValue("MAPPING")
+        if (this.dataPath == null) return
+        // For some reason the analyzer doesn't let me use string.replaceAll()
+        this.dataPathList = pathToList(this.dataPath)
     }
     dataPath: string | null = null
+    dataPathList: (ObjectIndex | ArrayIndex)[] = []
     tydiPath: string | null = null
 
     getChildren(): Record<string, TydiEl> {
