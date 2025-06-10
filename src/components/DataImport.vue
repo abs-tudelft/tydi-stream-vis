@@ -15,6 +15,7 @@ watch(() => dataCode, () => {
 })
 
 const parsedData = computed(() => {
+  highlights.value = []
   if (dataCode.value === '') return null
   let error = ''
   let parsed = null
@@ -46,6 +47,7 @@ const schema = computed(() => {
 })
 
 watch(schema, () => {
+  if (schema.value === null || schema.value === undefined || schema.value.error) return null
   emit('schema-update', schema.value)
 })
 
