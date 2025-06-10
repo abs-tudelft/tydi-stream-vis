@@ -40,7 +40,7 @@ import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 
-const emit = defineEmits(['schema-update'])
+const emit = defineEmits(['schema-update', 'select'])
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
@@ -131,6 +131,8 @@ function updateSelection(event: any) {
   const selectedBlock: Blockly.BlockSvg = selected
   selectedPath.value = selectedBlock.getFieldValue("MAPPING")
   selectedBlockType.value = selectedBlock.type
+  console.log("Selected block with path", selectedPath.value)
+  emit("select", [0, "array_example", 2])
 }
 
 onMounted(() => {

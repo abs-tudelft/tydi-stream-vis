@@ -1,6 +1,6 @@
 <template>
-  <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" />
-  <BlocklyCanvas @schema-update="tydiSchemaUpdate" ref="blockly" />
+  <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" ref="dataImport" />
+  <BlocklyCanvas @schema-update="tydiSchemaUpdate" @select="selectData" ref="blockly" />
   <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" />
 <!--  <stream-simulator />-->
 </template>
@@ -25,6 +25,7 @@ import StreamVisualizer from "@/components/StreamVisualizer.vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const blockly = ref<typeof BlocklyCanvas>()
+const dataImport = ref<typeof DataImport>()
 const inputData = ref<any[]>([])
 const tydiSchema = ref<TydiStreamlet[]>([])
 const streamVisualized = ref<TydiStream | null>(null)
@@ -57,6 +58,11 @@ declare global {
     snake2camel(): string;
     snake2pascal(): string;
   }
+}
+
+function selectData(path: ("string" | "number")[]) {
+  console.log("Received event with path", path)
+  dataImport.value!.select(path)
 }
 
 function processSchema(schema: any) {

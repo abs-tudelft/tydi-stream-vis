@@ -53,6 +53,9 @@ import 'highlight.js/lib/languages/typescript';
 // Import your preferred styling
 import 'highlight.js/styles/atom-one-dark.css';
 
+export interface HighlightChars { start: number, length: number, className?: string, type?: string }
+export interface HighlightLines { startLine: number, endLine: number, className?: string, type?: string }
+
 export default defineComponent({
   name: 'CodeEditor',
   props: {
@@ -71,6 +74,12 @@ export default defineComponent({
     placeholder: {
       type: String as PropType<string>,
       default: 'Enter your code here...'
+    },
+    highlights: {
+      type: Array as PropType<(HighlightChars | HighlightLines)[]>,
+      default: () => []
+      // Format: [{ start: number, length: number, className?: string, type?: string }]
+      // Or: [{ startLine: number, endLine: number, className?: string, type?: string }]
     }
   },
   emits: ['update:modelValue'],
@@ -149,7 +158,7 @@ export default defineComponent({
     };
 
     // Update syntax highlighting
-    const updateHighlighting = (): void => {
+    const updateHighlighting = () => {
       if (highlightLayer.value) {
         const codeElement = highlightLayer.value.querySelector('code');
         if (codeElement) {
@@ -281,5 +290,29 @@ export default defineComponent({
 .highlight-layer::-webkit-scrollbar-thumb:hover,
 .editor-textarea::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Add to your <style scoped> section */
+.code-highlight {
+  background-color: rgba(255, 255, 0, 0.3);
+  border-radius: 2px;
+}
+
+.highlighted-line {
+  background-color: rgba(255, 255, 0, 0.1);
+  display: block;
+  width: 100%;
+  padding: 0 4px;
+  margin: 0 -4px;
+}
+
+.error-highlight {
+  background-color: rgba(255, 0, 0, 0.2);
+  border-bottom: 2px wavy #ff0000;
+}
+
+.warning-highlight {
+  background-color: rgba(255, 165, 0, 0.2);
+  border-bottom: 2px wavy #ffa500;
 }
 </style>
