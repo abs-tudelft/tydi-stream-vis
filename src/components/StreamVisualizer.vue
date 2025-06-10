@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
-import {computed, ref, watch} from "vue";
+import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
+import {ArrayIndex, ObjectIndex} from "@/Tydi/utils.ts";
 
 const props = defineProps({
-  stream: TydiStream,
-  inputData: jsonc.Node,
+  stream: {
+    type: TydiStream,
+    required: true,
+  },
+  inputData: Object as PropType<jsonc.Node>,
+})
+
+const data = computed(() => {
+  if (!props.inputData) return {}
+  return jsonc.getNodeValue(props.inputData!)
 })
 
 // watch(() => props.stream, () => {})
@@ -13,8 +22,8 @@ const props = defineProps({
 const selectedIndexes = ref<number[]>([])
 
 const physicalStreams = computed(() => {
-  const streams = props.stream?.findStreams();
-  selectedIndexes.value = new Array<number>(streams!.length).fill(0);
+  const streams = props.stream.findStreams();
+  selectedIndexes.value = new Array<number>(streams.length).fill(0);
   return streams
 })
 
@@ -28,27 +37,22 @@ const relativePaths = computed(() => {
   return physicalStreams.value.map(s => s.dataPath!.replace(s.parent!.dataPath!, ""))
 })
 
-function dataAccessor(path: string) {
-  const dataPath = path.split(":")[0]
-  let pointer: any | any[] = jsonc.getNodeValue(props.inputData!)
-  // Split path and remove "root"
-  const pathSegments = dataPath.split('.').slice(1);
-  pathSegments.forEach(pathSegment => {
-    if (pointer instanceof Array) {
-      pointer = pointer[0] as any
-    }
-    pointer = pointer[pathSegment]
-  })
-  return pointer
+function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any[] {
+  if (path.length === 0) return []
+  const lastLeaf = path.length === 1
+  var newStack = (typeof stack ===  "string") ? Array.from(stack) : stack
+
+  if (path[0] instanceof ArrayIndex) {
+    return (newStack as any[]).flatMap((item) => lastLeaf ? item : selectData(item, path.slice(1)))
+  }
+  return lastLeaf ? [newStack[path[0].name]] : selectData(newStack, path.slice(1))
 }
 
-const arrayLengths = computed(() => {
-  if (props.inputData === undefined) return []
-  let list: any[] = []
-  physicalStreams.value?.forEach(stream => {
-    list.push(dataAccessor(stream.dataPath!).length)
+const dataThings = computed(() => {
+  return physicalStreams.value.map(s => {
+    const path = s.dataPathList
+    return selectData(data.value, path)
   })
-  return list
 })
 
 </script>
@@ -63,7 +67,7 @@ const arrayLengths = computed(() => {
       </template>
     </div>
   </template>
-  <div>{{arrayLengths}}</div>
+  <div>{{dataThings}}</div>
   <div>{{relativePaths}}</div>
 
 </template>

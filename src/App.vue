@@ -10,6 +10,7 @@ import { ref } from 'vue'
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
 import DataImport from "@/components/DataImport.vue";
 import * as Blockly from "blockly/core";
+import * as jsonc from 'jsonc-parser';
 import type {Schema} from "@/schemaParser.ts";
 import {
   bitBArgs, bitBDef,
@@ -26,9 +27,9 @@ import StreamVisualizer from "@/components/StreamVisualizer.vue";
 
 const blockly = ref<typeof BlocklyCanvas>()
 const dataImport = ref<typeof DataImport>()
-const inputData = ref<any[]>([])
+const inputData = ref<jsonc.Node>()
 const tydiSchema = ref<TydiStreamlet[]>([])
-const streamVisualized = ref<TydiStream | null>(null)
+const streamVisualized = ref<TydiStream>()
 
 /**
  * Converts a snake_case string to camelCase.
@@ -61,7 +62,6 @@ declare global {
 }
 
 function selectData(path: ("string" | "number")[]) {
-  console.log("Received event with path", path)
   dataImport.value!.select(path)
 }
 

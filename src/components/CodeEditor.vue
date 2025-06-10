@@ -227,7 +227,6 @@ export default defineComponent({
       if (!markingsLayer.value) return
       // Apply text highlights first
       const textWithHighlights = wrapTextWithHighlights(props.modelValue, props.highlights);
-      console.log('textWithHighlights', textWithHighlights);
 
       // Set the content with highlight spans
       markingsEl.value!.innerHTML = textWithHighlights + '\n';

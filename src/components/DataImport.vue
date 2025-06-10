@@ -4,11 +4,14 @@ import CodeHighlight from "@/components/CodeHighlight.vue";
 import {computed, ref, watch} from "vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import {type HighlightChars} from "@/components/CodeEditor.vue";
-import {generateSchema} from "@/schemaParser.ts";
+import {generateSchema, type Schema} from "@/schemaParser.ts";
 
 const dataCode = ref('')
 const highlights = ref<HighlightChars[]>([])
-const emit = defineEmits(['data-input', 'schema-update'])
+const emit = defineEmits<{
+  'data-input': [data: jsonc.Node],
+  'schema-update': [schema: Schema]
+}>()
 
 watch(() => dataCode, () => {
   console.log(dataCode.value)
