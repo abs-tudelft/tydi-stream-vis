@@ -2,7 +2,7 @@
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
-import {ArrayIndex, ObjectIndex} from "@/Tydi/utils.ts";
+import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
 
 const props = defineProps({
   stream: {
@@ -40,8 +40,30 @@ const relativePaths = computed(() => {
   }})
 })
 
-function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any[] {
-  if (path.length === 0) return stack
+/**
+ * Removes all arrays (including strings) out of an object, recursively.
+ * Since only ground types are returned and an otherwise new data structure is constructed, this does not share references with the original data.
+ * @param data Data to filter
+ */
+function dataToElement(data: Object | boolean | number | string | null): Object | boolean | number | string | null {
+  if (typeof data !== "object" || data === null) return data
+  const newObj = {}
+  for (let [key, value] of Object.entries(data)) {
+    // Filter out arrays and strings
+    if (Array.isArray(value) || typeof value === "string") continue
+    // @ts-ignore
+    newObj[key] = dataToElement(value)
+  }
+  return newObj
+}
+
+/**
+ * Follow a given path through the data stack.
+ * @param stack Data to index through
+ * @param path Path to follow
+ */
+function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any {
+  if (path.length === 0) return dataToElement(stack)
   // From the tydi perspective a string is an array, while from the js perspective it is one value.
   // Therefore, we convert strings to arrays.
   const newStack = (typeof stack === "string") ? Array.from(stack) : stack;
@@ -68,11 +90,11 @@ const dataThings = computed(() => {
 <template>
   <div>Number of physical streams: {{physicalStreams?.length ?? 0}}</div>
   <template v-for="(stream, i) in physicalStreams">
-    <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.e.type}}</kbd> that references <kbd>{{stream.dataPath}}</kbd></div>
+    <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.physRepr()}}</kbd> that references <kbd>{{stream.dataPath}}</kbd> is nested at dim <kbd>{{stream.dNesting}}</kbd> from root</div>
     <div>Data: <kbd>{{dataThings[i]}}</kbd></div>
     <div>
       <template v-for="item in stream.getItemsFlat()">
-        [<kbd>{{item.width}}</kbd> bits @ <kbd>{{item.dataPath}}</kbd>]
+        [<kbd>{{item.width}}</kbd> bits @ <kbd>{{listToPath(item.relativePathList)}}</kbd>]
       </template>
     </div>
     <hr class="my-3">

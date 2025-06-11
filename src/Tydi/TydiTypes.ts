@@ -33,6 +33,26 @@ export abstract class TydiEl extends TydiExtendable {
     abstract type: string
     parent: TydiEl | TydiStreamlet | null = null
 
+    get parentStream(): TydiStream | null {
+        let p: TydiEl | TydiStreamlet | null = this
+        do {
+            if (p === null || p === undefined || p instanceof TydiStreamlet) { return null }
+            p = p.parent
+        } while (!(p instanceof TydiStream))
+        return p as TydiStream
+    }
+
+    get relativePathList(): (ObjectIndex | ArrayIndex)[] {
+        let parentIndex = 0
+        for (let i = this.dataPathList.length - 1; i >= 0; i--) {
+            if (this.dataPathList[i] instanceof ArrayIndex) {
+                parentIndex = i
+                break
+            }
+        }
+        return this.dataPathList.slice(parentIndex+1)
+    }
+
     setPath(path: string) {
         this.tydiPath = path
         for (let [key, item] of Object.entries(this.getChildren())) {
@@ -81,6 +101,7 @@ export abstract class TydiEl extends TydiExtendable {
     }
 
     abstract repr(): String
+    abstract physRepr(): String
 }
 
 export class TydiBits extends TydiEl {
@@ -113,12 +134,20 @@ export class TydiBits extends TydiEl {
     repr(): String {
         return `Bits<${this.width}>`;
     }
+
+    physRepr(): String {
+        return this.repr();
+    }
 }
 
 export class TydiNull extends TydiEl {
     type = "Null"
     repr(): String {
         return 'Null';
+    }
+
+    physRepr(): String {
+        return this.repr();
     }
 }
 
@@ -177,6 +206,12 @@ export class TydiGroup extends TydiEl {
 
     repr(): String {
         const itemsRepr = Object.values(this.items).map(item => item.repr()).join(', ')
+        return `Group<${itemsRepr}>`;
+    }
+
+    physRepr(): String {
+        const itemsRepr = Object.values(this.items).filter(item => !item.isStream).map(item => item.physRepr()).join(', ')
+        if (itemsRepr.length === 0) return 'Group<Null>'
         return `Group<${itemsRepr}>`;
     }
 }
@@ -306,6 +341,22 @@ export class TydiStream extends TydiEl {
             return `Stream<${eRepr}>`;
         }
         return `Stream{${this.d}}<${eRepr}>`;
+    }
+
+    physRepr(): String {
+        if (this.e instanceof TydiStream) {
+            return `Stream<Null>`
+        }
+        const eRepr = this.e.physRepr()
+        if (this.d <= 1) {
+            return `Stream<${eRepr}>`;
+        }
+        return `Stream{${this.d}}<${eRepr}>`;
+    }
+
+    get dNesting() {
+        // Fixme this might go wrong at higher dimensional streams, I haven't implemented those yet
+        return this.dataPathList.filter(item => item instanceof ArrayIndex).length ?? 0
     }
 }
 

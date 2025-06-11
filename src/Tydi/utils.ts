@@ -19,3 +19,15 @@ export function pathToList(path: string): (ObjectIndex | ArrayIndex)[] {
             pathSegment === "[]" ? [new ArrayIndex] : new ObjectIndex(pathSegment)
         )
 }
+
+export function listToPath(path: (ObjectIndex | ArrayIndex)[]): string {
+    let pathString = ''
+    for (let pathEl of path) {
+        if (pathEl instanceof ArrayIndex) {
+            pathString += '[]'
+        } else {
+            pathString += '.' + pathEl.name
+        }
+    }
+    return pathString
+}
