@@ -18,4 +18,25 @@
     }
   },
   "null_example": null
+},
+{
+  "string_example": "This is another string",
+  "number_example_integer": 987,
+  "number_example_float": 654.321,
+  "boolean_example_true": true,
+  "boolean_example_false": false,
+  "array_example": [
+    "string1",
+    2,
+    false,
+    null
+  ],
+  "object_example": {
+    "key1": "second value",
+    "key2": 256,
+    "nested_object": {
+      "nested_key": "second nested value"
+    }
+  },
+  "null_example": null
 }]
