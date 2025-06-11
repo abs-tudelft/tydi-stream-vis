@@ -34,22 +34,26 @@ const firstStreamItems = computed(() => {
 
 const relativePaths = computed(() => {
   if (physicalStreams.value === undefined) return []
-  return physicalStreams.value.map(s => s.dataPath!.replace(s.parent!.dataPath!, ""))
+  return physicalStreams.value.map(s => { return {
+    parentPath: s.parent!.dataPath!,
+    relativePath: s.dataPath!.replace(s.parent!.dataPath!, "")
+  }})
 })
 
 function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any[] {
   if (path.length === 0) return stack
-  const lastLeaf = path.length === 1
-  var newStack = (typeof stack ===  "string") ? Array.from(stack) : stack
+  // From the tydi perspective a string is an array, while from the js perspective it is one value.
+  // Therefore, we convert strings to arrays.
+  const newStack = (typeof stack === "string") ? Array.from(stack) : stack;
 
   if (path[0] instanceof ArrayIndex) {
     if (newStack === null || newStack.map === undefined) {
       // This can be the case for arrays with different types
       return [newStack]
     }
-    return (newStack as any[]).map((item) => lastLeaf ? item : selectData(item, path.slice(1)))
+    return (newStack as any[]).map((item) => selectData(item, path.slice(1)))
   }
-  return lastLeaf ? [newStack[path[0].name]] : selectData(newStack[path[0].name], path.slice(1))
+  return selectData(newStack[path[0].name], path.slice(1))
 }
 
 const dataThings = computed(() => {
@@ -64,7 +68,7 @@ const dataThings = computed(() => {
 <template>
   <div>Number of physical streams: {{physicalStreams?.length ?? 0}}</div>
   <template v-for="(stream, i) in physicalStreams">
-    <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> that references <kbd>{{stream.dataPath}}</kbd></div>
+    <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.e.type}}</kbd> that references <kbd>{{stream.dataPath}}</kbd></div>
     <div>Data: <kbd>{{dataThings[i]}}</kbd></div>
     <div>
       <template v-for="item in stream.getItemsFlat()">

@@ -30,6 +30,7 @@ abstract class TydiExtendable {
 
 export abstract class TydiEl extends TydiExtendable {
     isStream: boolean = false
+    abstract type: string
     parent: TydiEl | TydiStreamlet | null = null
 
     setPath(path: string) {
@@ -83,6 +84,7 @@ export abstract class TydiEl extends TydiExtendable {
 }
 
 export class TydiBits extends TydiEl {
+    type = "Bits"
     public _width: number
     constructor(width: number) {
         super();
@@ -114,12 +116,14 @@ export class TydiBits extends TydiEl {
 }
 
 export class TydiNull extends TydiEl {
+    type = "Null"
     repr(): String {
         return 'Null';
     }
 }
 
 export class TydiGroup extends TydiEl {
+    type = "Group"
     public name: String
     public items: Record<string, TydiEl>
 
@@ -178,6 +182,7 @@ export class TydiGroup extends TydiEl {
 }
 
 export class TydiUnion extends TydiGroup {
+    type = "Union"
     constructor(name: String, items: Record<string, TydiEl>) {
         super(name, items);
     }
@@ -250,6 +255,7 @@ export class TydiUnion extends TydiGroup {
 }
 
 export class TydiStream extends TydiEl {
+    type = "Stream"
     isStream = true
     name: String
     e: TydiEl
