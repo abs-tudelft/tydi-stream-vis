@@ -106,8 +106,8 @@ function elRenderer(el: Object | number | string | boolean | null): string {
   <template v-for="(stream, i) in physicalStreams">
     <h3 class="my-3">Stream {{i}}: {{stream.name}}</h3>
     <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.physRepr()}}</kbd> that references <kbd>{{stream.dataPath}}</kbd> is nested at dim <kbd>{{stream.dNesting}}</kbd> from root</div>
-    <strong class="my-3 block">Data</strong>
-    <div><kbd>{{dataThings[i]}}</kbd></div>
+<!--    <strong class="my-3 block">Data</strong>
+    <div><kbd>{{dataThings[i]}}</kbd></div>-->
     <strong class="my-3 block">Packet layout</strong>
     <div>
       <template v-for="item in stream.getItemsFlat()">
@@ -115,9 +115,17 @@ function elRenderer(el: Object | number | string | boolean | null): string {
       </template>
     </div>
     <strong class="my-3 block">Stream elements</strong>
-    <div>
-      <template v-for="item in dataThings[i].flat(stream.dNesting)">
-        <kbd class="kbd-blue">{{ elRenderer(item) }} | b{{ stream.width }}</kbd>&nbsp;
+    <div class="flex flex-wrap gap-3">
+      <template v-for="(item, j) in dataThings[i].flat(stream.dNesting)">
+        <div class="tooltip cursor-pointer">
+          <div class="tooltip-content">
+            <div class="">
+              Element #{{j}}
+              <pre :class="{'text-left': typeof item === 'object' && item !== null}">{{ item ?? '∅' }}</pre>
+            </div>
+          </div>
+          <kbd class="kbd-blue">{{ elRenderer(item) }} | b{{ stream.width }}</kbd>
+        </div>
       </template>
     </div>
     <hr class="my-3">

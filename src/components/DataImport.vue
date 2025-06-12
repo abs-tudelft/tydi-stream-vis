@@ -77,9 +77,10 @@ defineExpose({select})
 </script>
 
 <template>
-  <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-    <code-editor v-model="dataCode" :highlights="highlights" language="javascript" title="Input data" />
-    <code-highlight :code="schemaCode" language="javascript" title="Inferred schema" />
+  <div class="w-full flex">
+    <code-editor class="grow flex-1/2" v-model="dataCode" :highlights="highlights" language="javascript" title="Input data" />
+    <div class="divider divider-horizontal text-center">⮞<br> I<br>n<br>f<br>e<br>r<br> ⮞</div>
+    <code-highlight class="grow flex-1/2" :code="schemaCode" language="javascript" title="Inferred schema" />
   </div>
 </template>
 

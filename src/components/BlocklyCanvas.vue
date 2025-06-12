@@ -1,27 +1,35 @@
 <template>
   <div>
-    <div ref="blocklyDiv" style="height: 80vh"></div>
-
-    <div class="text-center mt-3">
-      <span class="my-2 block">Represents:</span>
-      <div v-for="structure in tydiStructures">
-        <code class="bg-amber-50 rounded p-2 inline-block" v-if="structure.streams.length">{{structure.streams[0].repr()}}</code>
-      </div>
+    <div class="mt-4 mb-2 flex space-x-4 py-2 justify-center items-center">
+      <span>Tydi structure: </span>
+      <button @click="blocklySave" class="btn btn-primary px-4 rounded">
+        Save
+      </button>
+      <button @click="blocklyLoad" class="btn btn-secondary rounded">
+        Load
+      </button>
     </div>
-    <div class="flex flex-col justify-center items-center">
-      <div class="my-4 flex space-x-4">
-        <button @click="blocklySave" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
-          Save
-        </button>
-        <button @click="blocklyLoad" class="bg-red-600 text-white px-4 py-2 rounded shadow">
-          Load
-        </button>
-      </div>
-      <div class="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" />
-        <code-highlight :code="chiselCode" language="scala" title="Tydi-Chisel code" />
-        <code-highlight :code="clashCode" language="haskell" title="Tydi-Clash code" />
-      </div>
+
+    <div ref="blocklyDiv" style="height: 80vh" class="blockly-app-wrapper"></div>
+
+    <div class="divider mb-2">⮟ Interface code generation ⮟</div>
+    <div role="tablist" class="tabs tabs-border">
+      <span class="tab text-black! pl-0 cursor-default">Show code for:</span>
+      <a v-for="option in selectionOptions" role="tab" class="tab"
+         :class="{'tab-active': selectedOption === option}"
+         @click="selectedOption = option"
+      >{{ option }}</a>
+    </div>
+    <div class="w-full flex gap-x-4 mt-4" v-show="selectedOption !== 'none'" key="code wrapper">
+      <code-highlight key="tydilang" v-show="(['all', 'tydilang'] as SelectedTab[]).includes(selectedOption)"
+                      :code="tlCode" language="scala" title="Tydi-Lang code"
+                      class="flex-1/3 min-w-0" />
+      <code-highlight key="chisel" v-show="(['all', 'chisel'] as SelectedTab[]).includes(selectedOption)"
+                      :code="chiselCode" language="scala" title="Tydi-Chisel code"
+                      class="flex-1/3 min-w-0" />
+      <code-highlight key="clash" v-show="(['all', 'clash'] as SelectedTab[]).includes(selectedOption)"
+                      :code="clashCode" language="haskell" title="Tydi-Clash code"
+                      class="flex-1/3 min-w-0" />
     </div>
   </div>
 </template>
@@ -40,6 +48,10 @@ import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
+
+type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
+const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
+const selectedOption = ref<SelectedTab>("tydilang")
 
 const emit = defineEmits(['schema-update', 'select'])
 

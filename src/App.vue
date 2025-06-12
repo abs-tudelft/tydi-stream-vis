@@ -1,7 +1,12 @@
 <template>
   <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" ref="dataImport" />
+  <div class="divider">⮟ To Tydi representation ⮟</div>
   <BlocklyCanvas @schema-update="tydiSchemaUpdate" @select="selectData" ref="blockly" />
+  <div class="divider">⮟ Physical streams and transfer simulation ⮟</div>
   <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" />
+  <div v-else>
+    <em>Create a Tydi structure to get started with the visualization</em>
+  </div>
 <!--  <stream-simulator />-->
 </template>
 

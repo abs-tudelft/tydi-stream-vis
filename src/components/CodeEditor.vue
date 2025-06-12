@@ -264,7 +264,7 @@ export default defineComponent({
     const clearCode = (): void => {
       emit('update:modelValue', '');
       if (textarea.value) {
-        textarea.value.focus();
+        textarea.value.value = "";
       }
     };
 
