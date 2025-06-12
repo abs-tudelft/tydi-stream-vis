@@ -18,6 +18,10 @@ kbd {
     @apply text-red-400 bg-gray-100 rounded-md text-sm;
 }
 
+kbd.kbd-blue {
+    @apply text-blue-400 bg-blue-50;
+}
+
 /*body {
   min-height: 100vh;
   transition:

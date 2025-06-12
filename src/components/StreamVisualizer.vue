@@ -85,16 +85,39 @@ const dataThings = computed(() => {
   })
 })
 
+function elRenderer(el: Object | number | string | boolean | null): string {
+  switch (typeof el) {
+    case "string":
+      return '"' + el + '"'
+    case "number":
+      return el.toPrecision(2)
+    case "boolean":
+      return String(el)
+    case "object":
+      if (el === null) return '∅'
+      return '{ ⋅ }'
+  }
+}
+
 </script>
 
 <template>
   <div>Number of physical streams: {{physicalStreams?.length ?? 0}}</div>
   <template v-for="(stream, i) in physicalStreams">
+    <h3 class="my-3">Stream {{i}}: {{stream.name}}</h3>
     <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.physRepr()}}</kbd> that references <kbd>{{stream.dataPath}}</kbd> is nested at dim <kbd>{{stream.dNesting}}</kbd> from root</div>
-    <div>Data: <kbd>{{dataThings[i]}}</kbd></div>
+    <strong class="my-3 block">Data</strong>
+    <div><kbd>{{dataThings[i]}}</kbd></div>
+    <strong class="my-3 block">Packet layout</strong>
     <div>
       <template v-for="item in stream.getItemsFlat()">
         [<kbd>{{item.width}}</kbd> bits @ <kbd>{{listToPath(item.relativePathList)}}</kbd>]
+      </template>
+    </div>
+    <strong class="my-3 block">Stream elements</strong>
+    <div>
+      <template v-for="item in dataThings[i].flat(stream.dNesting)">
+        <kbd class="kbd-blue">{{ elRenderer(item) }} | b{{ stream.width }}</kbd>&nbsp;
       </template>
     </div>
     <hr class="my-3">
