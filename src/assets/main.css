@@ -19,8 +19,36 @@ kbd {
     @apply text-red-400 bg-gray-100 rounded-md text-sm;
 }
 
+kbd.kbd-gray {
+    @apply text-gray-600 bg-gray-50;
+}
+
+kbd.kbd-green {
+    @apply text-emerald-600 bg-emerald-50;
+}
+
 kbd.kbd-blue {
     @apply text-blue-400 bg-blue-50;
+}
+
+kbd.kbd-violet {
+    @apply text-violet-500 bg-violet-50;
+}
+
+kbd.kbd-purple {
+    @apply text-purple-400 bg-purple-50;
+}
+
+kbd.kbd-fuchsia {
+    @apply text-fuchsia-400 bg-fuchsia-50;
+}
+
+kbd.kbd-orange {
+    @apply text-orange-400 bg-orange-50;
+}
+
+kbd.kbd-yellow {
+    @apply text-yellow-600 bg-yellow-50;
 }
 
 /*body {

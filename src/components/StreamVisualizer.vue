@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
+import type {Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
 import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
@@ -85,6 +86,14 @@ const dataThings = computed(() => {
   })
 })
 
+const dataPackets = computed<TransferEl[][]>(() => {
+  return physicalStreams.value.map((s, i) => {
+    const packets = s.dataToElements(dataThings.value[i])
+    packets.forEach((p, i) => p.id = i)
+    return packets
+  })
+})
+
 function elRenderer(el: Object | number | string | boolean | null): string {
   switch (typeof el) {
     case "string":
@@ -116,21 +125,25 @@ function elRenderer(el: Object | number | string | boolean | null): string {
     </div>
     <strong class="my-3 block">Stream elements</strong>
     <div class="flex flex-wrap gap-3">
-      <template v-for="(item, j) in dataThings[i].flat(stream.dNesting)">
+      <template v-for="(item, j) in dataPackets[i]">
         <div class="tooltip cursor-pointer">
           <div class="tooltip-content">
             <div class="">
-              Element #{{j}}
-              <pre :class="{'text-left': typeof item === 'object' && item !== null}">{{ item ?? '∅' }}</pre>
+              Element #{{j}}<br>
+              Last: <span v-if="item.lastParent" class="text-gray-500">[{{item.lastParent}}]</span>{{item.last}}
+              <pre v-if="item.data !== undefined"
+                   :class="{'text-left': typeof item.data === 'object' && item.data !== null}"
+              >{{ item.data ?? '∅' }}</pre>
+              <span v-else>Empty item</span>
             </div>
           </div>
-          <kbd class="kbd-blue">{{ elRenderer(item) }} | b{{ stream.width }}</kbd>
+          <kbd :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+          >{{ elRenderer(item.data ? item.data : null) }} | b{{ stream.width }}</kbd>
         </div>
       </template>
     </div>
-    <hr class="my-3">
+    <hr class="my-3 border-gray-300">
   </template>
-  <div>{{relativePaths}}</div>
 
 </template>
 

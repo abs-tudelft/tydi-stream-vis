@@ -9,6 +9,7 @@ import {
     unionBDef
 } from "@/blocks/dslBlocks.ts";
 import {pathToList, ObjectIndex, ArrayIndex} from "@/Tydi/utils.ts";
+import type {DataEl, EmptyEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
 
 abstract class TydiExtendable {
     _block: Blockly.Block | null = null
@@ -298,6 +299,7 @@ export class TydiStream extends TydiEl {
     d: number
     c: number
     u: TydiEl
+    childStreams: TydiStream[] = []
 
     constructor(name: String, e: TydiEl, n: number, d: number, c: number, u: TydiEl = new TydiNull()) {
         super();
@@ -333,6 +335,38 @@ export class TydiStream extends TydiEl {
         const el = new TydiStream(streamName, item, n, d, c, user);
         el.block = block
         return el
+    }
+
+    dataToElements(data: any[] | any, last: string = "", indexes: number[] = []): TransferEl[] {
+        // Fixme the id is for sure wrong
+        const d = last.length
+        const maxNesting = this.dNesting + this.d
+        const isArray = Array.isArray(data)
+        const isEmpty = !isArray && d < maxNesting
+        if (isEmpty) {
+            const el: EmptyEl = {
+                id: 0,
+                last: last.slice(this.dNesting),
+                lastParent: last.slice(0, this.dNesting),
+                indexes: indexes,
+            }
+            return [el]
+        }
+        if (d === maxNesting) {
+            const el: DataEl = {
+                id: 0,
+                last: last.slice(this.dNesting),
+                lastParent: last.slice(0, this.dNesting),
+                indexes: indexes,
+                data: data
+            }
+            return [el]
+        }
+        const dataLength = data.length
+        const nonEndingLast = "0".repeat(d+1)
+        const nonLastElements: TransferEl[] = data.slice(0, dataLength-1).flatMap((subData: any[], i: number) => this.dataToElements(subData, nonEndingLast, [...indexes, i]))
+        const lastElements: TransferEl[] = this.dataToElements(data[dataLength-1], last + "1", [...indexes, dataLength-1])
+        return [...nonLastElements, ...lastElements]
     }
 
     repr(): String {
