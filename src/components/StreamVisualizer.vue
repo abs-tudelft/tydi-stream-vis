@@ -3,6 +3,7 @@ import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import type {Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
 import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
+import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
 
 const props = defineProps({
@@ -12,6 +13,11 @@ const props = defineProps({
   },
   inputData: Object as PropType<jsonc.Node>,
 })
+
+const emit = defineEmits<{
+  selectData: [path: jsonc.JSONPath],
+  selectBlock: [block: Blockly.BlockSvg],
+}>()
 
 const data = computed(() => {
   if (!props.inputData) return {}
@@ -108,6 +114,18 @@ function elRenderer(el: Object | number | string | boolean | null): string {
   }
 }
 
+function itemClick(item: TransferEl, stream: TydiStream) {
+  let i = 0
+  const dataPath = stream.dataPathList.map(pathSegment => {
+    return pathSegment instanceof ArrayIndex ? item.indexes[i++] : pathSegment.name
+  })
+  dataPath.push(item.indexes[i])
+  if (stream._block !== null) {
+    emit("selectBlock", stream._block as Blockly.BlockSvg)
+  }
+  emit("selectData", dataPath)
+}
+
 </script>
 
 <template>
@@ -137,7 +155,8 @@ function elRenderer(el: Object | number | string | boolean | null): string {
               <span v-else>Empty item</span>
             </div>
           </div>
-          <kbd :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+          <kbd @click="itemClick(item, stream)"
+               :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
           >{{ elRenderer(item.data ? item.data : null) }} | b{{ stream.width }}</kbd>
         </div>
       </template>

@@ -3,7 +3,7 @@
   <div class="divider">⮟ To Tydi representation ⮟</div>
   <BlocklyCanvas @schema-update="tydiSchemaUpdate" @select="selectData" ref="blockly" />
   <div class="divider">⮟ Physical streams and transfer simulation ⮟</div>
-  <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" />
+  <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" @selectData="selectData" @selectBlock="selectBlock" />
   <div v-else>
     <em>Create a Tydi structure to get started with the visualization</em>
   </div>
@@ -66,8 +66,12 @@ declare global {
   }
 }
 
-function selectData(path: ("string" | "number")[]) {
+function selectData(path: jsonc.JSONPath) {
   dataImport.value!.select(path)
+}
+
+function selectBlock(block: Blockly.BlockSvg) {
+  blockly.value!.setSelection(block)
 }
 
 function processSchema(schema: any) {

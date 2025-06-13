@@ -34,7 +34,7 @@ const parsedData = computed(() => {
   if (error) {
     return { error: error }
   }
-  emit('data-input', parsed)
+  emit('data-input', parsed as jsonc.Node)
   return parsed!
 })
 
@@ -51,7 +51,7 @@ const schema = computed(() => {
 
 watch(schema, () => {
   if (schema.value === null || schema.value === undefined || schema.value.error) return null
-  emit('schema-update', schema.value)
+  emit('schema-update', schema.value as Schema)
 })
 
 const schemaCode = computed(() => {
@@ -60,11 +60,20 @@ const schemaCode = computed(() => {
 })
 
 function select(elementPath: ("string" | "number")[]) {
+  const path = [... elementPath]
   console.log("Attempting to select", elementPath)
   if (parsedData.value === null || parsedData.value === undefined) return
 
-  const node = jsonc.findNodeAtLocation(parsedData.value! as jsonc.Node, elementPath)
-  if (node === undefined) return
+  let node = jsonc.findNodeAtLocation(parsedData.value! as jsonc.Node, elementPath)
+
+  if (node === undefined) {
+    const stringIndex = path.pop()
+    node = jsonc.findNodeAtLocation(parsedData.value! as jsonc.Node, path)
+    if (node === undefined) return
+    if (typeof stringIndex !== "number") throw `String index must be a number, got ${stringIndex}`
+    highlights.value = [{ start: node.offset + stringIndex + 1, length: 1 }]
+    return
+  }
 
   const offset = node.offset
   const length = node.length

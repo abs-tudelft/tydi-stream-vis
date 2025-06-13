@@ -8,9 +8,12 @@
       <button @click="blocklyLoad" class="btn btn-secondary rounded">
         Load
       </button>
+      <button @click="showCanvas = !showCanvas" class="btn btn-neutral rounded">
+        Toggle visibility
+      </button>
     </div>
 
-    <div ref="blocklyDiv" style="height: 80vh" class="blockly-app-wrapper"></div>
+    <div ref="blocklyDiv" v-show="showCanvas" style="height: 80vh" class="blockly-app-wrapper"></div>
 
     <div class="divider mb-2">⮟ Interface code generation ⮟</div>
     <div role="tablist" class="tabs tabs-border">
@@ -48,12 +51,19 @@ import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
+import * as jsonc from "jsonc-parser";
+import {setSelected} from "blockly/core/common";
 
 type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
 const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
 const selectedOption = ref<SelectedTab>("tydilang")
 
-const emit = defineEmits(['schema-update', 'select'])
+const emit = defineEmits<{
+  select: [path: jsonc.JSONPath],
+  'schema-update': [schema: TydiStreamlet[]],
+}>()
+
+const showCanvas = ref<boolean>(true)
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
@@ -65,6 +75,7 @@ const tydiStructures = ref<TydiStreamlet[]>([])
 const tydiSteams = ref<TydiStream[]>([])
 
 const selectedBlockType = ref<string | null>(null)
+const selectedBlock = ref<Blockly.BlockSvg | null>(null)
 const selectedPath = ref<string | null>(null)
 
 const supportedEvents = new Set([
@@ -116,7 +127,6 @@ function updateCode(event: any) {
   tlCode.value = _tlCode;
   chiselCode.value = _chiselCode;
   clashCode.value = _clashCode;
-  console.log(_tlCode);
 }
 
 function updateStructure(event: any) {
@@ -135,14 +145,26 @@ function updateStructure(event: any) {
   tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
 
+function setSelection(block: Blockly.BlockSvg) {
+  // Blockly.
+  console.log("Setting selection to block", block.id)
+  if (selectedBlock.value !== null) {
+    selectedBlock.value.unselect()
+  }
+  selectedBlock.value = block
+  block.select()
+}
+
+defineExpose({setSelection})
+
 function updateSelection(event: any) {
   if (event.type !== Blockly.Events.SELECTED) return
 
   const selected = Blockly.getSelected()
   if (!selected) return;
   // @ts-ignore
-  const selectedBlock: Blockly.BlockSvg = selected
-  selectedPath.value = selectedBlock.getFieldValue("MAPPING")
+  selectedBlock.value = selected
+  selectedPath.value = selectedBlock.value!.getFieldValue("MAPPING")
   if (!selectedPath.value) return
   const pathList = pathToList(selectedPath.value!)
   const pathListToEmit = pathList.map(el => {
@@ -152,7 +174,7 @@ function updateSelection(event: any) {
       return el.name
     }
   })
-  selectedBlockType.value = selectedBlock.type
+  selectedBlockType.value = selectedBlock.value!.type
   console.log("Selected block with path", selectedPath.value)
   emit("select", pathListToEmit)
 }
