@@ -100,11 +100,11 @@ const dataThings = computed(() => {
   })
 })
 
-const dataPackets = computed<TransferEl[][]>(() => {
+const dataTransfers = computed<Transfer[][]>(() => {
   return physicalStreams.value.map((s, i) => {
     const packets = s.dataToElements(dataThings.value[i])
     packets.forEach((p, i) => p.id = i)
-    return packets
+    return s.packetsToTransfers(packets)
   })
 })
 
@@ -147,24 +147,43 @@ function itemClick(item: TransferEl, stream: TydiStream) {
           references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
         </div>
         <strong class="my-3 block">Stream elements</strong>
-        <div class="flex flex-wrap gap-3">
-          <template v-for="(item, j) in dataPackets[i]">
-            <div class="tooltip cursor-pointer">
-              <div class="tooltip-content">
-                <div class="">
-                  Element #{{ j }}<br>
-                  Last: <span v-if="item.lastParent" class="text-gray-500">[{{ item.lastParent }}]</span>{{ item.last }}
-                  <pre v-if="item.data !== undefined"
-                       :class="{'text-left': typeof item.data === 'object' && item.data !== null}"
-                  >{{ item.data ?? '∅' }}</pre>
-                  <span v-else>Empty item</span>
-                </div>
-              </div>
-              <kbd @click="itemClick(item, stream)"
-                   :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
-              >{{ elRenderer(item.data ? item.data : null) }} | b{{ stream.width }}</kbd>
-            </div>
-          </template>
+        <div class="overflow-y-visible">
+          <div class="overflow-x-auto" style="margin-top: -20em; padding-top: 20em">
+            <table class="table table-pin-cols">
+              <thead>
+              <tr class="text-nowrap">
+                <th class="z-10">Transfer #</th>
+                <th v-for="j in dataTransfers[i].length">{{ j }}</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="j in stream.n">
+                <th class="z-10">Lane {{ j }}</th>
+                <td v-for="transfer in dataTransfers[i]">
+                  <div class="tooltip cursor-pointer" v-if="transfer.data[j-1] !== undefined">
+                    <div class="tooltip-content">
+                      <div class="">
+                        Element #{{ j }}<br>
+                        Last: <span v-if="transfer.data[j-1].lastParent" class="text-gray-500">[{{
+                          transfer.data[j - 1].lastParent
+                        }}]</span>{{ transfer.data[j - 1].last }}
+                        <pre v-if="transfer.data[j-1].data !== undefined"
+                             :class="{'text-left': typeof transfer.data[j-1].data === 'object' && transfer.data[j-1].data !== null}"
+                        >{{ transfer.data[j - 1].data ?? '∅' }}</pre>
+                        <span v-else>Empty item</span>
+                      </div>
+                    </div>
+                    <kbd @click="itemClick(transfer.data[j-1], stream)" class="text-nowrap"
+                         :class="transfer.data[j-1].last.includes('1') ? (transfer.data[j-1].lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+                    >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
+                        stream.width
+                      }}</kbd>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <hr class="my-3 border-gray-300">
       </template>

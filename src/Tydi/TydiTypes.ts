@@ -61,10 +61,10 @@ export abstract class TydiEl extends TydiExtendable {
         }
     }
 
-    findStreams(): TydiStream[] {
+    findStreams(directNestingOnly: boolean = false): TydiStream[] {
         let streams: TydiStream[] = []
         for (let [key, item] of Object.entries(this.getChildren())) {
-            streams.push(... item.findStreams())
+            streams.push(... item.findStreams(directNestingOnly))
         }
         if (this instanceof TydiStream) {
             streams = [this, ...streams]
@@ -311,6 +311,71 @@ export class TydiStream extends TydiEl {
         this.c = Math.round(c);
         this.u = u;
         this.u.parent = this
+        this.childStreams = this.e.findStreams(true)
+    }
+
+    findStreams(directNestingOnly: boolean = false): TydiStream[] {
+        if (directNestingOnly) {
+            return [this]
+        }
+        return super.findStreams(directNestingOnly);
+    }
+
+    packetsToTransfers(packets: TransferEl[]): Transfer[] {
+        type tState = "start" | "data" | "end"
+        let state: tState = "start"
+        const transfers: Transfer[] = []
+        let i = 0
+        let transfer: Transfer = {
+            id: 0,
+            stream: this,
+            data: [],
+            startIndex: 0,
+            endIndex: 0,
+            strobe: "",
+        }
+        for (let packet of packets) {
+            // When a new transfer is started, initialize clean transfer object
+            if (state === "start") {
+                transfer = {
+                    id: i++,
+                    stream: this,
+                    data: [],
+                    startIndex: 0,
+                    endIndex: 0,
+                    strobe: "1".repeat(this.d),
+                }
+                state = "data"
+            }
+            // If this packet is an empty one
+            if (packet.empty === true) {
+                // First push the previous transfer
+                if (transfer.data.length > 0) {
+                    transfer.endIndex = transfer.data.length - 1
+                    transfers.push(transfer)
+                }
+                // Push a transfer with the empty packet
+                transfers.push({
+                    id: i++,
+                    stream: this,
+                    data: [packet],
+                    startIndex: 0,
+                    endIndex: 1,
+                    strobe: "0".repeat(this.d),
+                })
+                state = "start"
+                continue
+            }
+            // If it does contain data, push it in the transfer
+            transfer.data.push(packet)
+            // If the packet is last of one of its dimensions, or the transfer is full
+            if (packet.last.includes("1") || transfer.data.length === this.n) {
+                transfer.endIndex = transfer.data.length-1
+                transfers.push(transfer)
+                state = "start"
+            }
+        }
+        return transfers
     }
 
     getChildren(): Record<string, TydiEl> {
@@ -349,6 +414,7 @@ export class TydiStream extends TydiEl {
                 last: last.slice(this.dNesting),
                 lastParent: last.slice(0, this.dNesting),
                 indexes: indexes,
+                empty: true
             }
             return [el]
         }

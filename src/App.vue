@@ -148,6 +148,7 @@ function processSchema(schema: any) {
       case 'string':
         const stringStreamBlock = workspace.newBlock(stringStreamBDef.type)
         stringStreamBlock.initSvg()
+        stringStreamBlock.setFieldValue(4, stringStreamBDef.argMap.N)
         addMapping(stringStreamBlock, path)
         parentConnection!.connect(stringStreamBlock.outputConnection!)
         return stringStreamBlock

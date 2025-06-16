@@ -9,7 +9,9 @@ interface TransferElBase {
 
 export type TransferEl = EmptyEl | DataEl
 
-export interface EmptyEl extends TransferElBase {}
+export interface EmptyEl extends TransferElBase {
+    empty: true;
+}
 
 export interface DataEl extends TransferElBase {
     data: TydiEl;
