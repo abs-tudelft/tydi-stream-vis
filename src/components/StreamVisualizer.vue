@@ -26,6 +26,8 @@ const data = computed(() => {
 
 // watch(() => props.stream, () => {})
 
+const selectedStream = ref<TydiStream | null>(null)
+
 const selectedIndexes = ref<number[]>([])
 
 const physicalStreams = computed(() => {
@@ -135,40 +137,85 @@ function itemClick(item: TransferEl, stream: TydiStream) {
 </script>
 
 <template>
-  <div>Number of physical streams: {{physicalStreams?.length ?? 0}}</div>
-  <template v-for="(stream, i) in physicalStreams">
-    <h3 class="my-3">Stream {{i}}: {{stream.name}}</h3>
-    <div>Stream {{stream.name}} at <kbd>{{stream.tydiPath}}</kbd> of type <kbd>{{stream.physRepr()}}</kbd> that references <kbd>{{stream.dataPath}}</kbd> is nested at dim <kbd>{{stream.dNesting}}</kbd> from root</div>
-<!--    <strong class="my-3 block">Data</strong>
-    <div><kbd>{{dataThings[i]}}</kbd></div>-->
-    <strong class="my-3 block">Packet layout</strong>
-    <div>
-      <template v-for="item in stream.getItemsFlat()">
-        [<kbd>{{item.width}}</kbd> bits @ <kbd>{{listToPath(item.relativePathList)}}</kbd>]
-      </template>
-    </div>
-    <strong class="my-3 block">Stream elements</strong>
-    <div class="flex flex-wrap gap-3">
-      <template v-for="(item, j) in dataPackets[i]">
-        <div class="tooltip cursor-pointer">
-          <div class="tooltip-content">
-            <div class="">
-              Element #{{j}}<br>
-              Last: <span v-if="item.lastParent" class="text-gray-500">[{{item.lastParent}}]</span>{{item.last}}
-              <pre v-if="item.data !== undefined"
-                   :class="{'text-left': typeof item.data === 'object' && item.data !== null}"
-              >{{ item.data ?? '∅' }}</pre>
-              <span v-else>Empty item</span>
-            </div>
-          </div>
-          <kbd @click="itemClick(item, stream)"
-               :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
-          >{{ elRenderer(item.data ? item.data : null) }} | b{{ stream.width }}</kbd>
+  <div class="flex w-full">
+    <div class="min-w-0 flex-1/2">
+      <div>Number of physical streams: {{ physicalStreams?.length ?? 0 }}</div>
+      <template v-for="(stream, i) in physicalStreams">
+        <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="selectedStream = stream">select</a></h3>
+        <div>Stream {{ stream.name }} at <kbd>{{ stream.tydiPath }}</kbd> of type <kbd>{{ stream.physRepr() }}</kbd>
+          that
+          references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
         </div>
+        <strong class="my-3 block">Stream elements</strong>
+        <div class="flex flex-wrap gap-3">
+          <template v-for="(item, j) in dataPackets[i]">
+            <div class="tooltip cursor-pointer">
+              <div class="tooltip-content">
+                <div class="">
+                  Element #{{ j }}<br>
+                  Last: <span v-if="item.lastParent" class="text-gray-500">[{{ item.lastParent }}]</span>{{ item.last }}
+                  <pre v-if="item.data !== undefined"
+                       :class="{'text-left': typeof item.data === 'object' && item.data !== null}"
+                  >{{ item.data ?? '∅' }}</pre>
+                  <span v-else>Empty item</span>
+                </div>
+              </div>
+              <kbd @click="itemClick(item, stream)"
+                   :class="item.last.includes('1') ? (item.lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+              >{{ elRenderer(item.data ? item.data : null) }} | b{{ stream.width }}</kbd>
+            </div>
+          </template>
+        </div>
+        <hr class="my-3 border-gray-300">
       </template>
     </div>
-    <hr class="my-3 border-gray-300">
-  </template>
+    <div class="divider divider-horizontal divider-primary"></div>
+    <div class="min-w-0 flex-1/2">
+      <div class="sticky top-0">
+        <h2>Stream information</h2>
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+          </thead>
+          <tr>
+            <td>Name</td>
+            <td v-if="selectedStream">
+              <kbd>{{ selectedStream.name ? selectedStream.name : 'nameless stream' }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>References</td>
+            <td v-if="selectedStream">
+              <kbd>{{ selectedStream.dataPath ? selectedStream.dataPath : 'root array' }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Packet layout</td>
+            <td v-if="selectedStream">
+              <template v-for="item in selectedStream.getItemsFlat()">
+                [<kbd>{{ item.width }}</kbd> bits @ <kbd>{{ item.relativePathList.length ? listToPath(item.relativePathList) : '.' }}</kbd>]
+              </template>
+            </td>
+          </tr>
+          <tr>
+            <td>Stream type</td>
+            <td v-if="selectedStream">
+              <kbd>{{ selectedStream.physRepr() }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Dimension</td>
+            <td v-if="selectedStream">
+              <kbd>d = {{ selectedStream.d }}</kbd>, nested at <kbd>{{ selectedStream.dNesting }}</kbd> levels from root
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
 
 </template>
 
