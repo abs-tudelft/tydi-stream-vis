@@ -1,6 +1,7 @@
 // Type definitions for the schema structure
 export type SchemaType =
     | 'string'
+    | 'date-time'
     | 'number'
     | 'boolean'
     | 'null'
@@ -34,6 +35,10 @@ export function generateSchema(
 
     // Handle primitive types
     if (typeof value === 'string') {
+        // Detect DateTime strings
+        if (value.isDateTime()) {
+            return { type: 'date-time' };
+        }
         return { type: 'string' };
     }
 

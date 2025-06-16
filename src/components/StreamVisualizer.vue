@@ -54,12 +54,18 @@ const relativePaths = computed(() => {
  */
 function dataToElement(data: Object | boolean | number | string | null): Object | boolean | number | string | null {
   if (typeof data !== "object" || data === null) return data
+  if (data instanceof Date) return data.valueOf()
   const newObj = {}
   for (let [key, value] of Object.entries(data)) {
+    let insertValue = value
     // Filter out arrays and strings
-    if (Array.isArray(value) || typeof value === "string") continue
+    if (Array.isArray(value)) continue
+    if (typeof value === "string") {
+      if (!value.isDateTime()) continue
+      insertValue = new Date(value)
+    }
     // @ts-ignore
-    newObj[key] = dataToElement(value)
+    newObj[key] = dataToElement(insertValue)
   }
   return newObj
 }
@@ -73,7 +79,7 @@ function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any {
   if (path.length === 0) return dataToElement(stack)
   // From the tydi perspective a string is an array, while from the js perspective it is one value.
   // Therefore, we convert strings to arrays.
-  const newStack = (typeof stack === "string") ? Array.from(stack) : stack;
+  const newStack = (typeof stack === "string") && !stack.isDateTime() ? Array.from(stack) : stack;
 
   if (path[0] instanceof ArrayIndex) {
     if (newStack === null || newStack.map === undefined) {

@@ -45,7 +45,7 @@ const schema = computed(() => {
       error: parsedData.value.error
     }
   } else {
-    return generateSchema(jsonc.getNodeValue(parsedData.value as jsonc.Node))
+    return generateSchema(jsonc.getNodeValue(parsedData.value as jsonc.Node), {detectEnums: true})
   }
 })
 

@@ -52,7 +52,6 @@ import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
 import * as jsonc from "jsonc-parser";
-import {setSelected} from "blockly/core/common";
 
 type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
 const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]

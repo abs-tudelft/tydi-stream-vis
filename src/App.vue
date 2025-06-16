@@ -36,36 +36,6 @@ const inputData = ref<jsonc.Node>()
 const tydiSchema = ref<TydiStreamlet[]>([])
 const streamVisualized = ref<TydiStream>()
 
-/**
- * Converts a snake_case string to camelCase.
- *
- * @returns The converted string in camelCase.
- */
-String.prototype.snake2camel = function (this: string): string {
-  if (!this) return ""
-
-  return this.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
-}
-
-/**
- * Converts a snake_case string to PascalCase.
- *
- * @returns The converted string in PascalCase.
- */
-String.prototype.snake2pascal = function (this: string): string {
-  if (!this) return ""
-
-  return this.snake2camel().replace(/^\w/, (c) => c.toUpperCase());
-}
-
-// Extend the String interface to include the string manipulators
-declare global {
-  interface String {
-    snake2camel(): string;
-    snake2pascal(): string;
-  }
-}
-
 function selectData(path: jsonc.JSONPath) {
   dataImport.value!.select(path)
 }
@@ -181,6 +151,13 @@ function processSchema(schema: any) {
         addMapping(stringStreamBlock, path)
         parentConnection!.connect(stringStreamBlock.outputConnection!)
         return stringStreamBlock
+      case 'date-time':
+        const dtBlock = workspace.newBlock(bitBDef.type)
+        dtBlock.initSvg()
+        dtBlock.setFieldValue(64, bitBArgs.WIDTH)
+        addMapping(dtBlock, path)
+        parentConnection!.connect(dtBlock.outputConnection!)
+        return dtBlock
       case 'number':
         const bitsBlock = workspace.newBlock(bitBDef.type)
         bitsBlock.initSvg()
