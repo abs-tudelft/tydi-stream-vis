@@ -84,6 +84,7 @@ function selectData(stack: any, path: (ObjectIndex | ArrayIndex)[]): any {
   const newStack = (typeof stack === "string") && !stack.isDateTime() ? Array.from(stack) : stack;
 
   if (path[0] instanceof ArrayIndex) {
+    if (newStack === undefined) { return [null] }
     if (newStack === null || newStack.map === undefined) {
       // This can be the case for arrays with different types
       return [newStack]
@@ -170,7 +171,7 @@ function elClasses(el: TransferEl) {
                 <th class="z-10">Lane {{ j }}</th>
                 <td v-for="transfer in dataTransfers[i]">
                   <div class="tooltip cursor-pointer" v-if="transfer.data[j-1] !== undefined">
-                    <div class="tooltip-content">
+                    <div class="tooltip-content z-99">
                       <div class="">
                         Element #{{ j }}<br>
                         Last: <span v-if="transfer.data[j-1].lastParent" class="text-gray-500">[{{
@@ -179,7 +180,7 @@ function elClasses(el: TransferEl) {
                         <pre v-if="transfer.data[j-1].data !== undefined"
                              :class="{'text-left': typeof transfer.data[j-1].data === 'object' && transfer.data[j-1].data !== null}"
                         >{{ transfer.data[j - 1].data ?? '∅' }}</pre>
-                        <span v-else>Empty item</span>
+                        <div v-else>Empty item</div>
                       </div>
                     </div>
                     <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"

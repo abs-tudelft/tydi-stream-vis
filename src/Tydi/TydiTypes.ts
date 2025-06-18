@@ -411,7 +411,7 @@ export class TydiStream extends TydiEl {
         if (isEmpty) {
             const el: EmptyEl = {
                 id: 0,
-                last: last.slice(this.dNesting),
+                last: last.slice(this.dNesting).padEnd(this.d, "0"),
                 lastParent: last.slice(0, this.dNesting),
                 indexes: indexes,
                 empty: true

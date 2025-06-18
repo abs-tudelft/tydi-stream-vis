@@ -56,7 +56,8 @@
       "React",
       "JavaScript",
       "Web Development",
-      "Hooks"
+      "Hooks",
+      ""
     ],
     "likes": 350,
     "shares": 80,
@@ -93,5 +94,20 @@
         "inReplyToCommentId": 4
       }
     ]
+  },
+  {
+    "postId": 943,
+    "title": "Difficult Situations",
+    "content": "",
+    "author": {
+      "userId": 341,
+      "username": "ThaNewbie"
+    },
+    "createdAt": "2025-04-14T09:00:00Z",
+    "updatedAt": "2025-06-16T10:45:00Z",
+    "tags": [],
+    "likes": 1,
+    "shares": 0,
+    "comments": []
   }
 ]
