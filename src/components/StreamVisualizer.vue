@@ -134,6 +134,15 @@ function itemClick(item: TransferEl, stream: TydiStream) {
   emit("selectData", dataPath)
 }
 
+function elClasses(el: TransferEl) {
+  return {
+    'closes-parent': el.lastParent.includes('1'),
+    'closes-inner': el.last.includes('1'),
+    'closes-highest': el.last[0] === '1'
+    // transfer.data[j-1].last.includes('1') ? (transfer.data[j-1].lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+  }
+}
+
 </script>
 
 <template>
@@ -173,8 +182,8 @@ function itemClick(item: TransferEl, stream: TydiStream) {
                         <span v-else>Empty item</span>
                       </div>
                     </div>
-                    <kbd @click="itemClick(transfer.data[j-1], stream)" class="text-nowrap"
-                         :class="transfer.data[j-1].last.includes('1') ? (transfer.data[j-1].lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
+                    <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"
+                         :class="elClasses(transfer.data[j-1])"
                     >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
                         stream.width
                       }}</kbd>
@@ -239,5 +248,22 @@ function itemClick(item: TransferEl, stream: TydiStream) {
 </template>
 
 <style scoped>
+@reference "../assets/main.css";
 
+.transfer-element {
+  @apply text-nowrap;
+  @apply text-gray-600 bg-gray-50;
+}
+
+.closes-inner {
+  @apply text-orange-400 bg-orange-50;
+}
+
+.closes-highest {
+  @apply text-fuchsia-400 bg-fuchsia-50;
+}
+
+.closes-parent {
+  @apply text-violet-500 bg-violet-50;
+}
 </style>

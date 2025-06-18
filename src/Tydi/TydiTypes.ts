@@ -455,8 +455,7 @@ export class TydiStream extends TydiEl {
     }
 
     get dNesting() {
-        // Fixme this might go wrong at higher dimensional streams, I haven't implemented those yet
-        return this.dataPathList.filter(item => item instanceof ArrayIndex).length ?? 0
+        return (this.dataPathList.filter(item => item instanceof ArrayIndex).length ?? 0) - this.d + 1
     }
 }
 
