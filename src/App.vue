@@ -1,7 +1,12 @@
 <template>
-  <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" />
-  <BlocklyCanvas @schema-update="tydiSchemaUpdate" ref="blockly" />
-  <StreamVisualizer :stream="streamVisualized!" :input-data="inputData" />
+  <DataImport @schema-update="processSchema" @data-input="(v) => inputData = v" ref="dataImport" />
+  <div class="divider">⮟ To Tydi representation ⮟</div>
+  <BlocklyCanvas @schema-update="tydiSchemaUpdate" @select="selectData" ref="blockly" />
+  <div class="divider">⮟ Physical streams and transfer simulation ⮟</div>
+  <StreamVisualizer v-if="streamVisualized" :stream="streamVisualized!" :input-data="inputData" @selectData="selectData" @selectBlock="selectBlock" />
+  <div v-else>
+    <em>Create a Tydi structure to get started with the visualization</em>
+  </div>
 <!--  <stream-simulator />-->
 </template>
 
@@ -10,6 +15,7 @@ import { ref } from 'vue'
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
 import DataImport from "@/components/DataImport.vue";
 import * as Blockly from "blockly/core";
+import * as jsonc from 'jsonc-parser';
 import type {Schema} from "@/schemaParser.ts";
 import {
   bitBArgs, bitBDef,
@@ -25,38 +31,17 @@ import StreamVisualizer from "@/components/StreamVisualizer.vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const blockly = ref<typeof BlocklyCanvas>()
-const inputData = ref<any[]>([])
+const dataImport = ref<typeof DataImport>()
+const inputData = ref<jsonc.Node>()
 const tydiSchema = ref<TydiStreamlet[]>([])
-const streamVisualized = ref<TydiStream | null>(null)
+const streamVisualized = ref<TydiStream>()
 
-/**
- * Converts a snake_case string to camelCase.
- *
- * @returns The converted string in camelCase.
- */
-String.prototype.snake2camel = function (this: string): string {
-  if (!this) return ""
-
-  return this.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+function selectData(path: jsonc.JSONPath) {
+  dataImport.value!.select(path)
 }
 
-/**
- * Converts a snake_case string to PascalCase.
- *
- * @returns The converted string in PascalCase.
- */
-String.prototype.snake2pascal = function (this: string): string {
-  if (!this) return ""
-
-  return this.snake2camel().replace(/^\w/, (c) => c.toUpperCase());
-}
-
-// Extend the String interface to include the string manipulators
-declare global {
-  interface String {
-    snake2camel(): string;
-    snake2pascal(): string;
-  }
+function selectBlock(block: Blockly.BlockSvg) {
+  blockly.value!.setSelection(block)
 }
 
 function processSchema(schema: any) {
@@ -78,7 +63,7 @@ function processSchema(schema: any) {
   streamlet.moveBy(-(workspaceSize.width/2)+200, -(workspaceSize.height/2)+80)
   streamlet.setFieldValue('RootStreamlet', streamletBArgs.NAME)
 
-  processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "root")
+  processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "")
 
   function mappingLabel(path: string) {
     return new Blockly.FieldLabel(path, "block-mapping-text")
@@ -156,35 +141,60 @@ function processSchema(schema: any) {
         streamBlock.initSvg()
         const streamName = (parentName ?? "My") + "Stream";
         streamBlock.setFieldValue(streamName, streamBArgs.NAME)
-        parentConnection!.connect(streamBlock.outputConnection!)
+        parentConnection!.connect(streamBlock.outputConnection)
         addMapping(streamBlock, path)
-        processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!, path)
-        return streamBlock
+        let d = 1
+        let childNode = processNode(node.items!, streamBlock, streamBlock.getInput(streamBArgs.E)?.connection!, `${path}[]`)
+        let returnedStreamBlock = streamBlock
+        let returnedPath = path
+        // If the child is also some kind of stream
+        while (childNode !== null && childNode.type.includes('stream')) {
+          returnedPath += '[]'
+          // Increase the dimension of the child stream
+          childNode.setFieldValue(++d, streamBArgs.D)
+          childNode.setFieldValue(returnedPath, "MAPPING")
+          // Connect the parent to the child stream instead
+          parentConnection!.connect(childNode.outputConnection)
+          const t = childNode
+          childNode = childNode.getInputTargetBlock(streamBArgs.E) as Blockly.BlockSvg
+          // Remove the previous stream block
+          returnedStreamBlock.dispose(false, false)
+          returnedStreamBlock = t
+        }
+        return returnedStreamBlock
       case 'string':
         const stringStreamBlock = workspace.newBlock(stringStreamBDef.type)
         stringStreamBlock.initSvg()
+        stringStreamBlock.setFieldValue(4, stringStreamBDef.argMap.N)
         addMapping(stringStreamBlock, path)
-        parentConnection!.connect(stringStreamBlock.outputConnection!)
+        parentConnection!.connect(stringStreamBlock.outputConnection)
         return stringStreamBlock
+      case 'date-time':
+        const dtBlock = workspace.newBlock(bitBDef.type)
+        dtBlock.initSvg()
+        dtBlock.setFieldValue(64, bitBArgs.WIDTH)
+        addMapping(dtBlock, path)
+        parentConnection!.connect(dtBlock.outputConnection)
+        return dtBlock
       case 'number':
         const bitsBlock = workspace.newBlock(bitBDef.type)
         bitsBlock.initSvg()
         bitsBlock.setFieldValue(64, bitBArgs.WIDTH)
         addMapping(bitsBlock, path)
-        parentConnection!.connect(bitsBlock.outputConnection!)
+        parentConnection!.connect(bitsBlock.outputConnection)
         return bitsBlock
       case 'boolean':
         const boolBlock = workspace.newBlock(bitBDef.type)
         boolBlock.initSvg()
         boolBlock.setFieldValue(1, bitBArgs.WIDTH)
         addMapping(boolBlock, path)
-        parentConnection!.connect(boolBlock.outputConnection!)
+        parentConnection!.connect(boolBlock.outputConnection)
         return boolBlock
       case 'null':
         const nullBlock = workspace.newBlock('logic_null')
         nullBlock.initSvg()
         addMapping(nullBlock, path)
-        parentConnection!.connect(nullBlock.outputConnection!)
+        parentConnection!.connect(nullBlock.outputConnection)
         return nullBlock
     }
   }

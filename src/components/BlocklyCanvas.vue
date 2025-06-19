@@ -1,27 +1,38 @@
 <template>
   <div>
-    <div ref="blocklyDiv" style="height: 80vh"></div>
-
-    <div class="text-center mt-3">
-      <span class="my-2 block">Represents:</span>
-      <div v-for="structure in tydiStructures">
-        <code class="bg-amber-50 rounded p-2 inline-block" v-if="structure.streams.length">{{structure.streams[0].repr()}}</code>
-      </div>
+    <div class="mt-4 mb-2 flex space-x-4 py-2 justify-center items-center">
+      <span>Tydi structure: </span>
+      <button @click="blocklySave" class="btn btn-primary px-4 rounded">
+        Save
+      </button>
+      <button @click="blocklyLoad" class="btn btn-secondary rounded">
+        Load
+      </button>
+      <button @click="showCanvas = !showCanvas" class="btn btn-neutral rounded">
+        Toggle visibility
+      </button>
     </div>
-    <div class="flex flex-col justify-center items-center">
-      <div class="my-4 flex space-x-4">
-        <button @click="blocklySave" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
-          Save
-        </button>
-        <button @click="blocklyLoad" class="bg-red-600 text-white px-4 py-2 rounded shadow">
-          Load
-        </button>
-      </div>
-      <div class="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-        <code-highlight :code="tlCode" language="scala" title="Tydi-Lang code" />
-        <code-highlight :code="chiselCode" language="scala" title="Tydi-Chisel code" />
-        <code-highlight :code="clashCode" language="haskell" title="Tydi-Clash code" />
-      </div>
+
+    <div ref="blocklyDiv" v-show="showCanvas" style="height: 80vh" class="blockly-app-wrapper"></div>
+
+    <div class="divider mb-2">⮟ Interface code generation ⮟</div>
+    <div role="tablist" class="tabs tabs-border">
+      <span class="tab text-black! pl-0 cursor-default">Show code for:</span>
+      <a v-for="option in selectionOptions" role="tab" class="tab"
+         :class="{'tab-active': selectedOption === option}"
+         @click="selectedOption = option"
+      >{{ option }}</a>
+    </div>
+    <div class="w-full flex gap-x-4 mt-4" v-show="selectedOption !== 'none'" key="code wrapper">
+      <code-highlight key="tydilang" v-show="(['all', 'tydilang'] as SelectedTab[]).includes(selectedOption)"
+                      :code="tlCode" language="scala" title="Tydi-Lang code"
+                      class="flex-1/3 min-w-0" />
+      <code-highlight key="chisel" v-show="(['all', 'chisel'] as SelectedTab[]).includes(selectedOption)"
+                      :code="chiselCode" language="scala" title="Tydi-Chisel code"
+                      class="flex-1/3 min-w-0" />
+      <code-highlight key="clash" v-show="(['all', 'clash'] as SelectedTab[]).includes(selectedOption)"
+                      :code="clashCode" language="haskell" title="Tydi-Clash code"
+                      class="flex-1/3 min-w-0" />
     </div>
   </div>
 </template>
@@ -39,8 +50,19 @@ import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
+import * as jsonc from "jsonc-parser";
 
-const emit = defineEmits(['schema-update'])
+type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
+const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
+const selectedOption = ref<SelectedTab>("tydilang")
+
+const emit = defineEmits<{
+  select: [path: jsonc.JSONPath],
+  'schema-update': [schema: TydiStreamlet[]],
+}>()
+
+const showCanvas = ref<boolean>(true)
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
@@ -51,8 +73,9 @@ const clashCode = ref('-- Start by creating a data structure')
 const tydiStructures = ref<TydiStreamlet[]>([])
 const tydiSteams = ref<TydiStream[]>([])
 
-const selectedBlockType = ref<String | null>(null)
-const selectedPath = ref<String | null>(null)
+const selectedBlockType = ref<string | null>(null)
+const selectedBlock = ref<Blockly.BlockSvg | null>(null)
+const selectedPath = ref<string | null>(null)
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -103,7 +126,6 @@ function updateCode(event: any) {
   tlCode.value = _tlCode;
   chiselCode.value = _chiselCode;
   clashCode.value = _clashCode;
-  console.log(_tlCode);
 }
 
 function updateStructure(event: any) {
@@ -122,15 +144,38 @@ function updateStructure(event: any) {
   tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
 
+function setSelection(block: Blockly.BlockSvg) {
+  // Blockly.
+  console.log("Setting selection to block", block.id)
+  if (selectedBlock.value !== null) {
+    selectedBlock.value.unselect()
+  }
+  selectedBlock.value = block
+  block.select()
+}
+
+defineExpose({setSelection})
+
 function updateSelection(event: any) {
   if (event.type !== Blockly.Events.SELECTED) return
 
   const selected = Blockly.getSelected()
   if (!selected) return;
   // @ts-ignore
-  const selectedBlock: Blockly.BlockSvg = selected
-  selectedPath.value = selectedBlock.getFieldValue("MAPPING")
-  selectedBlockType.value = selectedBlock.type
+  selectedBlock.value = selected
+  selectedPath.value = selectedBlock.value!.getFieldValue("MAPPING")
+  if (!selectedPath.value) return
+  const pathList = pathToList(selectedPath.value!)
+  const pathListToEmit = pathList.map(el => {
+    if (el instanceof ArrayIndex) {
+      return 0
+    } else {
+      return el.name
+    }
+  })
+  selectedBlockType.value = selectedBlock.value!.type
+  console.log("Selected block with path", selectedPath.value)
+  emit("select", pathListToEmit)
 }
 
 onMounted(() => {

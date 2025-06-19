@@ -8,14 +8,20 @@ import {
     stringStreamBDef,
     unionBDef
 } from "@/blocks/dslBlocks.ts";
+import {pathToList, ObjectIndex, ArrayIndex} from "@/Tydi/utils.ts";
+import type {DataEl, EmptyEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
 
 abstract class TydiExtendable {
     _block: Blockly.Block | null = null
     set block(block: Blockly.Block) {
         this._block = block
         this.dataPath = this._block.getFieldValue("MAPPING")
+        if (this.dataPath == null) return
+        // For some reason the analyzer doesn't let me use string.replaceAll()
+        this.dataPathList = pathToList(this.dataPath)
     }
     dataPath: string | null = null
+    dataPathList: (ObjectIndex | ArrayIndex)[] = []
     tydiPath: string | null = null
 
     getChildren(): Record<string, TydiEl> {
@@ -25,7 +31,28 @@ abstract class TydiExtendable {
 
 export abstract class TydiEl extends TydiExtendable {
     isStream: boolean = false
+    abstract type: string
     parent: TydiEl | TydiStreamlet | null = null
+
+    get parentStream(): TydiStream | null {
+        let p: TydiEl | TydiStreamlet | null = this
+        do {
+            if (p === null || p === undefined || p instanceof TydiStreamlet) { return null }
+            p = p.parent
+        } while (!(p instanceof TydiStream))
+        return p as TydiStream
+    }
+
+    get relativePathList(): (ObjectIndex | ArrayIndex)[] {
+        let parentIndex = 0
+        for (let i = this.dataPathList.length - 1; i >= 0; i--) {
+            if (this.dataPathList[i] instanceof ArrayIndex) {
+                parentIndex = i
+                break
+            }
+        }
+        return this.dataPathList.slice(parentIndex+1)
+    }
 
     setPath(path: string) {
         this.tydiPath = path
@@ -34,10 +61,10 @@ export abstract class TydiEl extends TydiExtendable {
         }
     }
 
-    findStreams(): TydiStream[] {
+    findStreams(directNestingOnly: boolean = false): TydiStream[] {
         let streams: TydiStream[] = []
         for (let [key, item] of Object.entries(this.getChildren())) {
-            streams.push(... item.findStreams())
+            streams.push(... item.findStreams(directNestingOnly))
         }
         if (this instanceof TydiStream) {
             streams = [this, ...streams]
@@ -75,9 +102,11 @@ export abstract class TydiEl extends TydiExtendable {
     }
 
     abstract repr(): String
+    abstract physRepr(): String
 }
 
 export class TydiBits extends TydiEl {
+    type = "Bits"
     public _width: number
     constructor(width: number) {
         super();
@@ -106,15 +135,25 @@ export class TydiBits extends TydiEl {
     repr(): String {
         return `Bits<${this.width}>`;
     }
+
+    physRepr(): String {
+        return this.repr();
+    }
 }
 
 export class TydiNull extends TydiEl {
+    type = "Null"
     repr(): String {
         return 'Null';
+    }
+
+    physRepr(): String {
+        return this.repr();
     }
 }
 
 export class TydiGroup extends TydiEl {
+    type = "Group"
     public name: String
     public items: Record<string, TydiEl>
 
@@ -170,9 +209,16 @@ export class TydiGroup extends TydiEl {
         const itemsRepr = Object.values(this.items).map(item => item.repr()).join(', ')
         return `Group<${itemsRepr}>`;
     }
+
+    physRepr(): String {
+        const itemsRepr = Object.values(this.items).filter(item => !item.isStream).map(item => item.physRepr()).join(', ')
+        if (itemsRepr.length === 0) return 'Group<Null>'
+        return `Group<${itemsRepr}>`;
+    }
 }
 
 export class TydiUnion extends TydiGroup {
+    type = "Union"
     constructor(name: String, items: Record<string, TydiEl>) {
         super(name, items);
     }
@@ -245,6 +291,7 @@ export class TydiUnion extends TydiGroup {
 }
 
 export class TydiStream extends TydiEl {
+    type = "Stream"
     isStream = true
     name: String
     e: TydiEl
@@ -252,6 +299,7 @@ export class TydiStream extends TydiEl {
     d: number
     c: number
     u: TydiEl
+    childStreams: TydiStream[] = []
 
     constructor(name: String, e: TydiEl, n: number, d: number, c: number, u: TydiEl = new TydiNull()) {
         super();
@@ -263,6 +311,71 @@ export class TydiStream extends TydiEl {
         this.c = Math.round(c);
         this.u = u;
         this.u.parent = this
+        this.childStreams = this.e.findStreams(true)
+    }
+
+    findStreams(directNestingOnly: boolean = false): TydiStream[] {
+        if (directNestingOnly) {
+            return [this]
+        }
+        return super.findStreams(directNestingOnly);
+    }
+
+    packetsToTransfers(packets: TransferEl[]): Transfer[] {
+        type tState = "start" | "data" | "end"
+        let state: tState = "start"
+        const transfers: Transfer[] = []
+        let i = 0
+        let transfer: Transfer = {
+            id: 0,
+            stream: this,
+            data: [],
+            startIndex: 0,
+            endIndex: 0,
+            strobe: "",
+        }
+        for (let packet of packets) {
+            // When a new transfer is started, initialize clean transfer object
+            if (state === "start") {
+                transfer = {
+                    id: i++,
+                    stream: this,
+                    data: [],
+                    startIndex: 0,
+                    endIndex: 0,
+                    strobe: "1".repeat(this.d),
+                }
+                state = "data"
+            }
+            // If this packet is an empty one
+            if (packet.empty === true) {
+                // First push the previous transfer
+                if (transfer.data.length > 0) {
+                    transfer.endIndex = transfer.data.length - 1
+                    transfers.push(transfer)
+                }
+                // Push a transfer with the empty packet
+                transfers.push({
+                    id: i++,
+                    stream: this,
+                    data: [packet],
+                    startIndex: 0,
+                    endIndex: 1,
+                    strobe: "0".repeat(this.d),
+                })
+                state = "start"
+                continue
+            }
+            // If it does contain data, push it in the transfer
+            transfer.data.push(packet)
+            // If the packet is last of one of its dimensions, or the transfer is full
+            if (packet.last.includes("1") || transfer.data.length === this.n) {
+                transfer.endIndex = transfer.data.length-1
+                transfers.push(transfer)
+                state = "start"
+            }
+        }
+        return transfers
     }
 
     getChildren(): Record<string, TydiEl> {
@@ -289,12 +402,60 @@ export class TydiStream extends TydiEl {
         return el
     }
 
+    dataToElements(data: any[] | any, last: string = "", indexes: number[] = []): TransferEl[] {
+        // Fixme the id is for sure wrong
+        const d = last.length
+        const maxNesting = this.dNesting + this.d
+        const isArray = Array.isArray(data)
+        const isEmpty = !isArray && d < maxNesting
+        if (isEmpty) {
+            const el: EmptyEl = {
+                id: 0,
+                last: last.slice(this.dNesting).padEnd(this.d, "0"),
+                lastParent: last.slice(0, this.dNesting),
+                indexes: indexes,
+                empty: true
+            }
+            return [el]
+        }
+        if (d === maxNesting) {
+            const el: DataEl = {
+                id: 0,
+                last: last.slice(this.dNesting),
+                lastParent: last.slice(0, this.dNesting),
+                indexes: indexes,
+                data: data
+            }
+            return [el]
+        }
+        const dataLength = data.length
+        const nonEndingLast = "0".repeat(d+1)
+        const nonLastElements: TransferEl[] = data.slice(0, dataLength-1).flatMap((subData: any[], i: number) => this.dataToElements(subData, nonEndingLast, [...indexes, i]))
+        const lastElements: TransferEl[] = this.dataToElements(data[dataLength-1], last + "1", [...indexes, dataLength-1])
+        return [...nonLastElements, ...lastElements]
+    }
+
     repr(): String {
         const eRepr = this.e.repr()
         if (this.d <= 1) {
             return `Stream<${eRepr}>`;
         }
         return `Stream{${this.d}}<${eRepr}>`;
+    }
+
+    physRepr(): String {
+        if (this.e instanceof TydiStream) {
+            return `Stream<Null>`
+        }
+        const eRepr = this.e.physRepr()
+        if (this.d <= 1) {
+            return `Stream<${eRepr}>`;
+        }
+        return `Stream{${this.d}}<${eRepr}>`;
+    }
+
+    get dNesting() {
+        return (this.dataPathList.filter(item => item instanceof ArrayIndex).length ?? 0) - this.d + 1
     }
 }
 

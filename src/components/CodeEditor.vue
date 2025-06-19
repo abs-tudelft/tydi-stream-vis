@@ -18,11 +18,17 @@
       </div>
     </div>
 
-    <div class="relative">
-      <!-- Highlighted background layer -->
+    <div class="relative layer-wrapper">
+      <!-- Highlighted background layers -->
+      <pre
+        ref="markingsLayer"
+        class="markings-layer code-layer z-10 absolute"
+        aria-hidden="true"
+      ><code ref="markingsEl"><span class="code-highlight"></span></code></pre>
+
       <pre
         ref="highlightLayer"
-        class="highlight-layer rounded-b-lg m-0 pointer-events-none inset-0 z-10"
+        class="highlight-layer code-layer z-15 relative"
         aria-hidden="true"
       ><code ref="codeEl" :class="languageClass"></code></pre>
 
@@ -53,6 +59,9 @@ import 'highlight.js/lib/languages/typescript';
 // Import your preferred styling
 import 'highlight.js/styles/atom-one-dark.css';
 
+export interface HighlightChars { start: number, length: number, className?: string, type?: string }
+export interface HighlightLines { startLine: number, endLine: number, className?: string, type?: string }
+
 export default defineComponent({
   name: 'CodeEditor',
   props: {
@@ -71,6 +80,12 @@ export default defineComponent({
     placeholder: {
       type: String as PropType<string>,
       default: 'Enter your code here...'
+    },
+    highlights: {
+      type: Array as PropType<(HighlightChars | HighlightLines)[]>,
+      default: () => []
+      // Format: [{ start: number, length: number, className?: string, type?: string }]
+      // Or: [{ startLine: number, endLine: number, className?: string, type?: string }]
     }
   },
   emits: ['update:modelValue'],
@@ -78,6 +93,8 @@ export default defineComponent({
     const textarea = ref<HTMLTextAreaElement | null>(null);
     const highlightLayer = ref<HTMLPreElement | null>(null);
     const codeEl = ref<HTMLPreElement | null>(null);
+    const markingsLayer = ref<HTMLPreElement | null>(null);
+    const markingsEl = ref<HTMLPreElement | null>(null);
     const copied = ref<boolean>(false);
     const languageClass = ref<string>(`language-${props.language}`);
 
@@ -89,9 +106,11 @@ export default defineComponent({
 
     // Sync scroll between textarea and highlight layer
     const syncScroll = (): void => {
-      if (textarea.value && codeEl.value) {
+      if (textarea.value && codeEl.value && markingsEl.value) {
         codeEl.value.scrollTop = textarea.value.scrollTop;
         codeEl.value.scrollLeft = textarea.value.scrollLeft;
+        markingsEl.value.scrollTop = textarea.value.scrollTop;
+        markingsEl.value.scrollLeft = textarea.value.scrollLeft;
       }
     };
 
@@ -148,21 +167,87 @@ export default defineComponent({
       }
     };
 
-    // Update syntax highlighting
-    const updateHighlighting = (): void => {
-      if (highlightLayer.value) {
-        const codeElement = highlightLayer.value.querySelector('code');
-        if (codeElement) {
-          // Clear any previous highlighting
-          if (codeElement.hasAttribute('data-highlighted')) {
-            codeElement.removeAttribute('data-highlighted');
-            codeElement.textContent = '';
-          }
+    const wrapTextWithHighlights = (text: string, highlights: (HighlightChars | HighlightLines)[]) => {
+      if (!highlights || highlights.length === 0) return text;
 
-          // Set the new content and highlight
-          codeElement.textContent = props.modelValue + '\n'; // Add newline to match textarea
-          hljs.highlightElement(codeElement);
+      // Convert line-based highlights to character-based if needed
+      const charHighlights = highlights.map(highlight => {
+        if (highlight.startLine !== undefined) {
+          return convertLineToCharHighlight(text, highlight as HighlightLines);
         }
+        return highlight as HighlightChars;
+      });
+
+      // Sort highlights by start position (descending) to avoid offset issues
+      const sortedHighlights = [...charHighlights].sort((a, b) => b.start - a.start);
+
+      let result = text;
+
+      sortedHighlights.forEach(highlight => {
+        const { start, length, className = 'code-highlight', type = 'highlight' } = highlight;
+        const end = start + length;
+
+        if (start >= 0 && end <= result.length) {
+          const before = result.substring(0, start);
+          const highlighted = result.substring(start, end);
+          const after = result.substring(end);
+
+          result = before +
+            `<span class="${className}" data-highlight-type="${type}">` +
+            highlighted +
+            '</span>' +
+            after;
+        }
+      });
+
+      return result;
+    };
+
+    const convertLineToCharHighlight = (text: string, lineHighlight: HighlightLines): HighlightChars => {
+      const lines = text.split('\n');
+      const { startLine, endLine = startLine, className, type } = lineHighlight;
+
+      // Calculate character offset for start line
+      let start = 0;
+      for (let i = 0; i < startLine - 1; i++) {
+        start += lines[i].length + 1; // +1 for newline
+      }
+
+      // Calculate length
+      let length = 0;
+      for (let i = startLine - 1; i <= Math.min(endLine - 1, lines.length - 1); i++) {
+        length += lines[i].length;
+        if (i < endLine - 1) length += 1; // Add newline except for last line
+      }
+
+      return { start, length, className, type };
+    };
+
+    const updateMarkings = () => {
+      if (!markingsLayer.value) return
+      // Apply text highlights first
+      const textWithHighlights = wrapTextWithHighlights(props.modelValue, props.highlights);
+
+      // Set the content with highlight spans
+      markingsEl.value!.innerHTML = textWithHighlights + '\n';
+    }
+
+    const updateHighlighting = () => {
+      if (!highlightLayer.value) return
+
+      const codeElement = highlightLayer.value.querySelector('code');
+      if (codeElement) {
+        // Clear any previous highlighting
+        if (codeElement.hasAttribute('data-highlighted')) {
+          codeElement.removeAttribute('data-highlighted');
+          codeElement.textContent = '';
+        }
+
+        codeElement.textContent = props.modelValue + '\n';
+
+        // Apply syntax highlighting while preserving our highlight spans
+        hljs.highlightElement(codeElement);
+        updateMarkings();
       }
     };
 
@@ -179,7 +264,7 @@ export default defineComponent({
     const clearCode = (): void => {
       emit('update:modelValue', '');
       if (textarea.value) {
-        textarea.value.focus();
+        textarea.value.value = "";
       }
     };
 
@@ -194,6 +279,12 @@ export default defineComponent({
       });
     });
 
+    watch(() => props.highlights, () => {
+      nextTick(() => {
+        updateMarkings();
+      });
+    });
+
     watch(() => props.language, () => {
       languageClass.value = `language-${props.language}`;
       nextTick(() => {
@@ -205,6 +296,8 @@ export default defineComponent({
       textarea,
       highlightLayer,
       codeEl,
+      markingsLayer,
+      markingsEl,
       copied,
       languageClass,
       handleInput,
@@ -217,7 +310,7 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
+<style>
 @reference "../assets/main.css";
 
 .code-editor-container {
@@ -225,15 +318,25 @@ export default defineComponent({
   position: relative;
 }
 
-.highlight-layer {
-  @apply overflow-hidden bg-gray-100 dark:bg-gray-900;
+.layer-wrapper {
+  background-color: #282c34;
+  @apply rounded-b-lg;
+}
+
+.code-layer {
+  @apply overflow-hidden;
+  /*@apply bg-gray-50 dark:bg-gray-900;*/
+  @apply block w-full;
+  @apply m-0 pointer-events-none;
   white-space: pre-wrap;
   word-wrap: break-word;
   color: transparent;
+  /*position: absolute;*/
 }
 
-.highlight-layer code {
-  @apply p-4;
+.code-layer code {
+  @apply p-4! block;
+  @apply bg-transparent!;
 }
 
 .editor-textarea {
@@ -254,7 +357,7 @@ export default defineComponent({
 }
 
 /* Ensure both layers have the same dimensions */
-.highlight-layer code,
+.code-layer code,
 .editor-textarea {
   min-height: 200px;
   max-height: 60vh;
@@ -281,5 +384,31 @@ export default defineComponent({
 .highlight-layer::-webkit-scrollbar-thumb:hover,
 .editor-textarea::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+.code-highlight {
+  background-color: rgba(134, 142, 255, 0.3);
+  border-radius: 2px;
+  text-shadow: rgba(0, 0, 0, 0.58) 0 0 5px;
+  margin: 0px -2px;
+  padding: 0 2px;
+}
+
+.highlighted-line {
+  background-color: rgba(255, 255, 0, 0.1);
+  display: block;
+  width: 100%;
+  padding: 0 4px;
+  margin: 0 -4px;
+}
+
+.error-highlight {
+  background-color: rgba(255, 0, 0, 0.2);
+  border-bottom: 2px wavy #ff0000;
+}
+
+.warning-highlight {
+  background-color: rgba(255, 165, 0, 0.2);
+  border-bottom: 2px wavy #ffa500;
 }
 </style>
