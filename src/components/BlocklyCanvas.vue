@@ -1,7 +1,13 @@
 <template>
   <div>
-    <div ref="blocklyDiv" style="height: 70vh"></div>
+    <div ref="blocklyDiv" style="height: 80vh"></div>
 
+    <div class="text-center mt-3">
+      <span class="my-2 block">Represents:</span>
+      <div v-for="structure in tydiStructures">
+        <code class="bg-amber-50 rounded p-2 inline-block" v-if="structure.streams.length">{{structure.streams[0].repr()}}</code>
+      </div>
+    </div>
     <div class="flex flex-col justify-center items-center">
       <div class="my-4 flex space-x-4">
         <button @click="blocklySave" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
@@ -21,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import {onMounted, ref} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
@@ -31,12 +37,22 @@ import {generateTLCode} from "@/blocks/tlGenerator";
 import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
+import {streamletBDef} from "@/blocks/dslBlocks.ts";
+import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+
+const emit = defineEmits(['schema-update'])
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
 const tlCode = ref('// Start by creating a data structure')
 const chiselCode = ref('// Start by creating a data structure')
 const clashCode = ref('-- Start by creating a data structure')
+
+const tydiStructures = ref<TydiStreamlet[]>([])
+const tydiSteams = ref<TydiStream[]>([])
+
+const selectedBlockType = ref<String | null>(null)
+const selectedPath = ref<String | null>(null)
 
 const supportedEvents = new Set([
   Blockly.Events.BLOCK_CHANGE,
@@ -90,6 +106,33 @@ function updateCode(event: any) {
   console.log(_tlCode);
 }
 
+function updateStructure(event: any) {
+  let _workspace = workspace.value!;
+  if (_workspace.isDragging()) return; // Don't update while changes are happening.
+  if (!supportedEvents.has(event.type)) return;
+
+  const topBlocks = _workspace.getTopBlocks(false)
+  const structures: TydiStreamlet[] = []
+  for (let topBlock of topBlocks) {
+    if (topBlock.type !== streamletBDef.type) continue
+    structures.push(TydiStreamlet.fromBlock(topBlock))
+  }
+  tydiStructures.value = structures
+  emit("schema-update", structures)
+  tydiSteams.value = structures[0].streams['stream'].findStreams()
+}
+
+function updateSelection(event: any) {
+  if (event.type !== Blockly.Events.SELECTED) return
+
+  const selected = Blockly.getSelected()
+  if (!selected) return;
+  // @ts-ignore
+  const selectedBlock: Blockly.BlockSvg = selected
+  selectedPath.value = selectedBlock.getFieldValue("MAPPING")
+  selectedBlockType.value = selectedBlock.type
+}
+
 onMounted(() => {
   if (!blocklyDiv.value) {
     return;
@@ -102,6 +145,10 @@ onMounted(() => {
       colour: '#ccc',
       snap: true
     },
+    scrollbars: true,
+    move: {
+      drag: true
+    },
     zoom: {
       controls: true,
       wheel: false
@@ -110,6 +157,8 @@ onMounted(() => {
   })
 
   workspace.value.addChangeListener(updateCode);
+  workspace.value.addChangeListener(updateStructure);
+  workspace.value.addChangeListener(updateSelection);
 })
 </script>
 

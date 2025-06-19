@@ -5,7 +5,7 @@ import CodeEditor from "@/components/CodeEditor.vue";
 import {generateSchema} from "@/schemaParser.ts";
 
 const dataCode = ref('')
-const emit = defineEmits(['schema-update'])
+const emit = defineEmits(['data-input', 'schema-update'])
 
 watch(() => dataCode, () => {
   console.log(dataCode.value)
@@ -13,13 +13,21 @@ watch(() => dataCode, () => {
 
 const parsedData = computed(() => {
   if (dataCode.value === '') return null
+  let error = ''
+  let parsed = null
   try {
-    return JSON.parse(dataCode.value)
-  } catch (e: any) {
-    return {
-      error: e.message
+    parsed = JSON.parse(dataCode.value);
+    if (!Array.isArray(parsed)) {
+      error = "Root should be an array"
     }
+  } catch (e: any) {
+    error = e.message
   }
+  if (error) {
+    return { error: error }
+  }
+  emit('data-input', parsed)
+  return parsed
 })
 
 const schema = computed(() => {
