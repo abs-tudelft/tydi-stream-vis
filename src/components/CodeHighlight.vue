@@ -1,6 +1,6 @@
 <template>
   <div class="code-highlight-container">
-    <div class="flex justify-between items-center bg-gray-800 text-white p-2 rounded-t-lg">
+    <div class="flex justify-between items-center bg-gray-800 text-white dark:bg-gray-600 p-2 rounded-t-lg">
       <div class="text-sm font-medium">{{ title }}</div>
       <button
         @click="copyCode"
@@ -9,7 +9,7 @@
         {{ copied ? 'Copied!' : 'Copy' }}
       </button>
     </div>
-    <pre class="highlight-layer rounded-b-lg m-0 border border-gray-800 text-base"><code ref="codeBlock" :class="languageClass"></code></pre>
+    <pre class="highlight-layer rounded-b-lg m-0 text-base"><code ref="codeBlock" :class="languageClass"></code></pre>
   </div>
 </template>
 
@@ -90,12 +90,18 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+@reference "../assets/main.css";
+
+.highlight-layer {
+  background-color: #282c34;
+}
+
 .highlight-layer code {
   max-height: 60vh;
 }
 
 .hljs {
-  background: transparent;
+  background: transparent !important;
 }
 </style>

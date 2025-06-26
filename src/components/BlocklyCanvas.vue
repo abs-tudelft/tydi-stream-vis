@@ -17,7 +17,7 @@
 
     <div class="divider mb-2">⮟ Interface code generation ⮟</div>
     <div role="tablist" class="tabs tabs-border">
-      <span class="tab text-black! pl-0 cursor-default">Show code for:</span>
+      <span class="tab text-black! dark:text-gray-400! pl-0 cursor-default">Show code for:</span>
       <a v-for="option in selectionOptions" role="tab" class="tab"
          :class="{'tab-active': selectedOption === option}"
          @click="selectedOption = option"
