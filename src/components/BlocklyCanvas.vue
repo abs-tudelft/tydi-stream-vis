@@ -48,7 +48,7 @@ import {generateTLCode} from "@/blocks/tlGenerator";
 import {generateChiselCode} from "@/blocks/ChiselGenerator";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
-import {streamletBDef} from "@/blocks/dslBlocks.ts";
+import {streamBDef, streamletBDef} from "@/blocks/dslBlocks.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
 import * as jsonc from "jsonc-parser";
@@ -58,7 +58,7 @@ const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "
 const selectedOption = ref<SelectedTab>("tydilang")
 
 const emit = defineEmits<{
-  select: [path: jsonc.JSONPath],
+  select: [path: jsonc.JSONPath | null],
   'schema-update': [schema: TydiStreamlet[]],
 }>()
 
@@ -159,12 +159,19 @@ defineExpose({setSelection})
 function updateSelection(event: any) {
   if (event.type !== Blockly.Events.SELECTED) return
 
-  const selected = Blockly.getSelected()
+  const selected = Blockly.getSelected() as Blockly.BlockSvg
   if (!selected) return;
   // @ts-ignore
   selectedBlock.value = selected
   selectedPath.value = selectedBlock.value!.getFieldValue("MAPPING")
-  if (!selectedPath.value) return
+  if (!selectedPath.value) {
+    if (selected.type === streamBDef.type) {
+      emit("select", [])
+    } else {
+      emit("select", null)
+    }
+    return
+  }
   const pathList = pathToList(selectedPath.value!)
   const pathListToEmit = pathList.map(el => {
     if (el instanceof ArrayIndex) {
