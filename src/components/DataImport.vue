@@ -59,7 +59,11 @@ const schemaCode = computed(() => {
   return JSON.stringify(schema.value, null, 2)
 })
 
-function select(elementPath: ("string" | "number")[]) {
+function select(elementPath: ("string" | "number")[] | null) {
+  if (elementPath === null) {
+    highlights.value = []
+    return
+  }
   const path = [... elementPath]
   console.log("Attempting to select", elementPath)
   if (parsedData.value === null || parsedData.value === undefined) return

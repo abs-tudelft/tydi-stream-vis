@@ -17,6 +17,7 @@
 kbd {
     @apply inline-block px-2 py-1 text-sm leading-tight;
     @apply text-red-400 bg-gray-100 rounded-md text-sm;
+    @apply dark:text-red-400 dark:bg-gray-700;
 }
 
 kbd.kbd-gray {

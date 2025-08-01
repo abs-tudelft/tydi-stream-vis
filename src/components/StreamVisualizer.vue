@@ -254,17 +254,21 @@ function elClasses(el: TransferEl) {
 .transfer-element {
   @apply text-nowrap;
   @apply text-gray-600 bg-gray-50;
+  @apply dark:text-gray-200 dark:bg-gray-600;
 }
 
 .closes-inner {
   @apply text-orange-400 bg-orange-50;
+  @apply dark:text-orange-300 dark:bg-orange-900;
 }
 
 .closes-highest {
   @apply text-fuchsia-400 bg-fuchsia-50;
+  @apply dark:text-fuchsia-300 dark:bg-fuchsia-900;
 }
 
 .closes-parent {
   @apply text-violet-500 bg-violet-50;
+  @apply dark:text-violet-300 dark:bg-violet-900;
 }
 </style>

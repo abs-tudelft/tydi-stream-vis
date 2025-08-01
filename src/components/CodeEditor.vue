@@ -1,6 +1,6 @@
 <template>
   <div class="code-editor-container">
-    <div class="flex justify-between items-center bg-gray-800 text-white p-2 rounded-t-lg">
+    <div class="flex justify-between items-center bg-gray-800 text-white dark:bg-gray-600 p-2 rounded-t-lg">
       <div class="text-sm font-medium">{{ title }}</div>
       <div class="flex space-x-2">
         <button

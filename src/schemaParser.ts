@@ -1,3 +1,5 @@
+import './Tydi/utils.ts';
+
 // Type definitions for the schema structure
 export type SchemaType =
     | 'string'
@@ -56,7 +58,7 @@ export function generateSchema(
             // Empty array - assume any type for items
             return {
                 type: 'array',
-                items: { type: 'string', nullable: true }
+                // Explicitly don't fill in the type value, so empty arrays can be ignored for the schema merging
             };
         }
 
@@ -151,8 +153,10 @@ export function analyzeObjects<T extends Record<string, any>>(
         // Generate schema from the non-null values
         let propSchema: Schema;
 
-        // Handle potential enums
-        if (options.detectEnums && nonNullValues.every(v => typeof v === typeof nonNullValues[0])) {
+        // Handle potential enums (but only for non-array, non-object values)
+        if (options.detectEnums &&
+            nonNullValues.every(v => typeof v === typeof nonNullValues[0]) &&
+            !nonNullValues.some(v => Array.isArray(v) || (typeof v === 'object' && v !== null))) {
             const uniqueValues = [...new Set(nonNullValues)];
             const baseType = typeof nonNullValues[0];
 
