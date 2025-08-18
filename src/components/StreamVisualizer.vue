@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
-import type {Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
+import type {DataEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
 import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
+import DataVector from "@/components/dataVector.vue";
 
 const props = defineProps({
   stream: {
@@ -27,6 +28,7 @@ const data = computed(() => {
 // watch(() => props.stream, () => {})
 
 const selectedStream = ref<TydiStream | null>(null)
+const selectedElement = ref<TransferEl | null>(null)
 
 const selectedIndexes = ref<number[]>([])
 
@@ -124,6 +126,8 @@ function elRenderer(el: Object | number | string | boolean | null): string {
 }
 
 function itemClick(item: TransferEl, stream: TydiStream) {
+  selectedStream.value = stream
+  selectedElement.value = item
   let i = 0
   const dataPath = stream.dataPathList.map(pathSegment => {
     return pathSegment instanceof ArrayIndex ? item.indexes[i++] : pathSegment.name
@@ -142,6 +146,10 @@ function elClasses(el: TransferEl) {
     'closes-highest': el.last[0] === '1'
     // transfer.data[j-1].last.includes('1') ? (transfer.data[j-1].lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
   }
+}
+
+function dataVectorHover(path: string[]) {
+  console.log("Hovering", path)
 }
 
 </script>
@@ -209,6 +217,7 @@ function elClasses(el: TransferEl) {
             <th>Value</th>
           </tr>
           </thead>
+          <tbody>
           <tr>
             <td>Name</td>
             <td v-if="selectedStream">
@@ -241,7 +250,54 @@ function elClasses(el: TransferEl) {
               <kbd>d = {{ selectedStream.d }}</kbd>, nested at <kbd>{{ selectedStream.dNesting }}</kbd> levels from root
             </td>
           </tr>
+          </tbody>
         </table>
+        <h2>Packet inspector</h2>
+        <template v-if="selectedElement">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>Packet number</td>
+            <td>
+              <kbd>{{ selectedElement.id }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>List indexing</td>
+            <td>
+              <kbd>{{ selectedElement.indexes }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Dimensionality information</td>
+            <td>
+              <kbd>[{{ selectedElement.lastParent }}]{{ selectedElement.last }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Packet data</td>
+            <td>
+              <kbd>{{ (selectedElement as DataEl).data ? selectedElement.data : "" }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Packet layout</td>
+            <td>
+              <data-vector :data="selectedElement.data" :path="[]" @hover="dataVectorHover" />
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <h3>Raw packet data</h3>
+        <pre>{{ selectedElement }}</pre>
+        </template>
       </div>
     </div>
   </div>

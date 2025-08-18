@@ -52,6 +52,22 @@ kbd.kbd-yellow {
     @apply text-yellow-600 bg-yellow-50;
 }
 
+.data-vector.depth-1 {
+    @apply bg-amber-100;
+}
+
+.data-vector.depth-2 {
+    @apply bg-red-100;
+}
+
+.data-vector.depth-3 {
+    @apply bg-purple-100;
+}
+
+.data-vector {
+    @apply mx-0.5;
+}
+
 /*body {
   min-height: 100vh;
   transition:
