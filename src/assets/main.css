@@ -66,6 +66,7 @@ kbd.kbd-yellow {
 
 .data-vector {
     @apply mx-0.5;
+    @apply font-mono;
 }
 
 /*body {

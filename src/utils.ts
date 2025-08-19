@@ -4,7 +4,7 @@
  * @param width The desired bit width for the output string.
  * @returns The two's complement binary string.
  */
-function toTwosComplement(num: number, width: number): string {
+export function toTwosComplement(num: number, width: number): string {
     // If the number is non-negative, it's a standard binary conversion.
     if (num >= 0) {
         const binary = num.toString(2);

@@ -5,7 +5,8 @@ import {computed, type PropType, ref, watch} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
-import DataVector from "@/components/dataVector.vue";
+import DataVector from "@/components/DataVector.vue";
+import type {DisplayType} from "@/components/DataVector.vue";
 
 const props = defineProps({
   stream: {
@@ -29,6 +30,7 @@ const data = computed(() => {
 
 const selectedStream = ref<TydiStream | null>(null)
 const selectedElement = ref<TransferEl | null>(null)
+const packetDisplayType = ref<DisplayType>('decimal')
 
 const selectedIndexes = ref<number[]>([])
 
@@ -208,7 +210,7 @@ function dataVectorHover(path: string[]) {
     </div>
     <div class="divider divider-horizontal divider-primary"></div>
     <div class="min-w-0 flex-1/2">
-      <div class="sticky top-0">
+      <div class="sticky top-0 max-h-screen overflow-auto">
         <h2>Stream information</h2>
         <table class="table">
           <thead>
@@ -253,7 +255,7 @@ function dataVectorHover(path: string[]) {
           </tbody>
         </table>
         <h2>Packet inspector</h2>
-        <template v-if="selectedElement">
+        <template v-if="selectedElement && selectedStream">
         <table class="table">
           <thead>
           <tr>
@@ -289,7 +291,13 @@ function dataVectorHover(path: string[]) {
           <tr>
             <td>Packet layout</td>
             <td>
-              <data-vector :data="selectedElement.data" :path="[]" @hover="dataVectorHover" />
+              <ul class="menu menu-horizontal bg-base-200 rounded-box menu-sm mb-3 gap-1 p-1">
+                <li @click="packetDisplayType='decimal'"><a :class="packetDisplayType === 'decimal' ? 'menu-active' : ''">Decimal</a></li>
+                <li @click="packetDisplayType='binary'"><a :class="packetDisplayType === 'binary' ? 'menu-active' : ''">Binary</a></li>
+                <li @click="packetDisplayType='hexadecimal'"><a :class="packetDisplayType === 'hexadecimal' ? 'menu-active' : ''">Hexadecimal</a></li>
+              </ul>
+              <br>
+              <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDisplayType" />
             </td>
           </tr>
           </tbody>
