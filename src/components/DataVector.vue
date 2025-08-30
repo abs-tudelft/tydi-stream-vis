@@ -60,7 +60,7 @@ const representation = computed(() => {
 
 <template>
 <span @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['data-vector', `depth-${depth}`]">
-  <template v-if="!isLeaf" v-for="(value, key) in data" :key="key">
+  <template v-if="!isLeaf" v-for="[key, value] in Object.entries(data).reverse()" :key="key">
     <data-vector :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" />
   </template>
   <template v-else>
