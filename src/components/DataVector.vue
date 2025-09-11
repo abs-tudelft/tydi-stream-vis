@@ -36,12 +36,10 @@ const isLeaf = computed(() => typeof props.data !== 'object')
 const depth = computed(() => props.path.length)
 
 function hover(enter: boolean) {
-  if (isLeaf.value) {
-    if (enter) {
-      emit('hover', props.path)
-    } else {
-      emit('hover', [])
-    }
+  if (enter) {
+    emit('hover', props.path)
+  } else {
+    emit('hover', props.path.slice(0, -1))
   }
 }
 
