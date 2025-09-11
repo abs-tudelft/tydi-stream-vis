@@ -24,7 +24,19 @@ abstract class TydiExtendable {
     dataPathList: (ObjectIndex | ArrayIndex)[] = []
     tydiPath: string | null = null
 
+    /**
+     * Returns all children of this element in the logical representation, this includes nested streams
+     * and unions in their field/group-like representation.
+     */
     getChildren(): Record<string, TydiEl> {
+        return {}
+    }
+
+    /**
+     * Returns only the children that would be present in a physical stream.
+     * This means no nested streams and for unions the physical representation of tag and data.
+     */
+    getPhysicalChildren(): Record<string, TydiEl> {
         return {}
     }
 }
@@ -72,12 +84,22 @@ export abstract class TydiEl extends TydiExtendable {
         return streams
     }
 
+    /**
+     * Returns the aggregated width in bits of all children.
+     */
     get width(): number {
         return Object.values(this.getChildren()).reduce((acc, cur) => acc + cur.width, 0);
     }
 
+    /**
+     * Returns the aggregated width in bits of all children for physical stream representation.
+     */
+    get physicalWidth(): number {
+        return Object.values(this.getPhysicalChildren()).reduce((acc, cur) => acc + cur.physicalWidth, 0);
+    }
+
     getItemsFlat(): TydiEl[] {
-        return Object.values(this.getChildren()).filter(c => !c.isStream).flatMap(c => c.getItemsFlat())
+        return Object.values(this.getPhysicalChildren()).flatMap(c => c.getItemsFlat())
     }
 
     static fromBlock(block: Blockly.Block): TydiEl {
@@ -116,6 +138,10 @@ export class TydiBits extends TydiEl {
     // This is a getter because it overloads the method of TydiEl
     get width(): number {
         return this._width;
+    }
+
+    get physicalWidth(): number {
+        return this.width
     }
 
     getItemsFlat(): TydiEl[] {
@@ -172,6 +198,13 @@ export class TydiGroup extends TydiEl {
 
     getChildren(): Record<string, TydiEl> {
         return this.items
+    }
+
+    getPhysicalChildren(): Record<string, TydiEl> {
+        return Object.entries(this.items).filter(([_, item]) => !item.isStream).reduce((acc, cur) => {
+            acc[cur[0]] = cur[1]
+            return acc
+        }, {} as Record<string, TydiEl>)
     }
 
     static fromBlock(block: Blockly.Block): TydiGroup {
@@ -239,7 +272,7 @@ export class TydiUnion extends TydiGroup {
         return this.unionWidth + this.tagWidth
     }
 
-    getItemsFlat(): TydiEl[] {
+    getPhysicalChildren(): Record<string, TydiEl> {
         const union = new TydiBits(this.unionWidth)
         union.tydiPath = `${this.tydiPath}.union`
         union.dataPath = `${this.dataPath}:data`
@@ -250,7 +283,14 @@ export class TydiUnion extends TydiGroup {
         if (this._block) {
             tag.block = this._block
         }
-        return [tag, union]
+        return {
+            union: union,
+            tag: tag
+        }
+    }
+
+    getItemsFlat(): TydiEl[] {
+        return Object.values(this.getPhysicalChildren())
     }
 
     static fromBlock(block: Blockly.Block): TydiUnion {
@@ -383,6 +423,10 @@ export class TydiStream extends TydiEl {
             e: this.e,
             u: this.u,
         }
+    }
+
+    getPhysicalChildren(): Record<string, TydiEl> {
+        return this.getChildren()
     }
 
     static fromBlock(block: Blockly.Block): TydiStream {

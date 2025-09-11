@@ -72,7 +72,7 @@ const isSelected = computed(() => {
 
 <template>
 <div @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['packet-layout', `depth-${depth}`, `${tydiElement.type.toLowerCase()}-packet`, `packet-${isLeaf ? 'leaf' : 'branch'}`, isSelected ? 'selected' : '']">
-  <strong>{{ tydiElement.type }}</strong>: {{ label }}, {{ tydiElement.width }} bits
+  <strong>{{ tydiElement.type }}</strong>: {{ label }}, {{ tydiElement.physicalWidth }} bits
   <template v-if="!isLeaf" v-for="[key, value] in Object.entries(data)" :key="key">
     <packet-layout :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" :selected-path="selectedPath" />
   </template>

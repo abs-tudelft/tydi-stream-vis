@@ -201,7 +201,7 @@ function dataVectorHover(path: string[]) {
                     <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"
                          :class="elClasses(transfer.data[j-1])"
                     >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
-                        stream.width
+                        stream.physicalWidth
                       }}</kbd>
                   </div>
                 </td>
