@@ -3,8 +3,7 @@
 import {type TydiEl, TydiGroup} from "@/Tydi/TydiTypes.ts";
 import {computed, type PropType} from "vue";
 import {toTwosComplement} from "@/utils.ts";
-
-export type DisplayType = 'decimal' | 'hexadecimal' | 'binary'
+import type {DisplayType} from "@/components/NumberFormatSelector.vue";
 
 const props = defineProps({
   data: {
@@ -18,6 +17,10 @@ const props = defineProps({
   path: {
     type: Array,
     required: true,
+  },
+  selectedPath: {
+    type: Array,
+    required: false,
   },
   displayType: {
     type: String as PropType<DisplayType>,
@@ -56,12 +59,18 @@ const representation = computed(() => {
   }
 })
 
+const isSelected = computed(() => {
+  if (props.selectedPath === undefined) return false
+  if (depth.value === 0) return false
+  return props.selectedPath.join('.') === props.path.join('.')
+})
+
 </script>
 
 <template>
-<span @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['data-vector', `depth-${depth}`]">
+<span @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['data-vector', `depth-${depth}`, isSelected ? 'selected' : '']">
   <template v-if="!isLeaf" v-for="[key, value] in Object.entries(data).reverse()" :key="key">
-    <data-vector :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" />
+    <data-vector :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" :selected-path="selectedPath" />
   </template>
   <template v-else>
     <div class="tooltip cursor-pointer">
@@ -78,6 +87,28 @@ const representation = computed(() => {
 </span>
 </template>
 
-<style scoped>
+<style>
+@reference "../assets/main.css";
+
+.data-vector.depth-1 {
+  @apply bg-amber-100;
+}
+
+.data-vector.depth-2 {
+  @apply bg-red-100;
+}
+
+.data-vector.depth-3 {
+  @apply bg-purple-100;
+}
+
+.data-vector {
+  @apply mx-0.5;
+  @apply font-mono;
+}
+
+.data-vector.selected {
+  @apply outline-2 outline-blue-500;
+}
 
 </style>

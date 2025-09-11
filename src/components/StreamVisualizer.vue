@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import type {DataEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
-import {computed, type PropType, ref, watch} from "vue";
+import {computed, type PropType, ref} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
 import DataVector from "@/components/DataVector.vue";
-import type {DisplayType} from "@/components/DataVector.vue";
 import PacketLayout from "@/components/PacketLayout.vue";
+import type {DisplayType} from "@/components/NumberFormatSelector.vue";
+import NumberFormatSelector from "@/components/NumberFormatSelector.vue";
+
 
 const props = defineProps({
   stream: {
@@ -31,7 +33,9 @@ const data = computed(() => {
 
 const selectedStream = ref<TydiStream | null>(null)
 const selectedElement = ref<TransferEl | null>(null)
-const packetDisplayType = ref<DisplayType>('decimal')
+const packetStructureDisplayType = ref<DisplayType>('decimal')
+const packetDataDisplayType = ref<DisplayType>('decimal')
+const hoveredPacketNode = ref<String[] | null>()
 
 const selectedIndexes = ref<number[]>([])
 
@@ -152,7 +156,7 @@ function elClasses(el: TransferEl) {
 }
 
 function dataVectorHover(path: string[]) {
-  console.log("Hovering", path)
+  hoveredPacketNode.value = path
 }
 
 </script>
@@ -292,19 +296,18 @@ function dataVectorHover(path: string[]) {
           <tr>
             <td>Packet layout</td>
             <td>
-              <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDisplayType" />
+              Number format:
+              <number-format-selector v-model="packetStructureDisplayType"/>
+              <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetStructureDisplayType" :selected-path="hoveredPacketNode" />
             </td>
           </tr>
           <tr>
             <td>Packet data packing</td>
             <td>
-              <ul class="menu menu-horizontal bg-base-200 rounded-box menu-sm mb-3 gap-1 p-1">
-                <li @click="packetDisplayType='decimal'"><a :class="packetDisplayType === 'decimal' ? 'menu-active' : ''">Decimal</a></li>
-                <li @click="packetDisplayType='binary'"><a :class="packetDisplayType === 'binary' ? 'menu-active' : ''">Binary</a></li>
-                <li @click="packetDisplayType='hexadecimal'"><a :class="packetDisplayType === 'hexadecimal' ? 'menu-active' : ''">Hexadecimal</a></li>
-              </ul>
+              Number format:
+              <number-format-selector v-model="packetDataDisplayType"/>
               <br>
-              <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDisplayType" />
+              <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDataDisplayType" :selected-path="hoveredPacketNode" />
             </td>
           </tr>
           </tbody>

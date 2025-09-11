@@ -3,8 +3,7 @@
 import {type TydiEl, TydiGroup} from "@/Tydi/TydiTypes.ts";
 import {computed, type PropType} from "vue";
 import {toTwosComplement} from "@/utils.ts";
-
-export type DisplayType = 'decimal' | 'hexadecimal' | 'binary'
+import type {DisplayType} from "@/components/NumberFormatSelector.vue";
 
 const props = defineProps({
   data: {
@@ -18,6 +17,10 @@ const props = defineProps({
   path: {
     type: Array,
     required: true,
+  },
+  selectedPath: {
+    type: Array,
+    required: false,
   },
   displayType: {
     type: String as PropType<DisplayType>,
@@ -61,13 +64,19 @@ const label = computed<string>(() => {
   return path_segments[path_segments.length - 1]
 })
 
+const isSelected = computed(() => {
+  if (props.selectedPath === undefined) return false
+  if (depth.value === 0) return false
+  return props.selectedPath.join('.') === props.path.join('.')
+})
+
 </script>
 
 <template>
-<div @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['packet-layout', `depth-${depth}`, `${tydiElement.type.toLowerCase()}-packet`, `packet-${isLeaf ? 'leaf' : 'branch'}`]">
+<div @mouseenter="hover(true)" @mouseleave="hover(false)" :class="['packet-layout', `depth-${depth}`, `${tydiElement.type.toLowerCase()}-packet`, `packet-${isLeaf ? 'leaf' : 'branch'}`, isSelected ? 'selected' : '']">
   <strong>{{ tydiElement.type }}</strong>: {{ label }}, {{ tydiElement.width }} bits
-  <template v-if="!isLeaf" v-for="[key, value] in Object.entries(data).reverse()" :key="key">
-    <packet-layout :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" />
+  <template v-if="!isLeaf" v-for="[key, value] in Object.entries(data)" :key="key">
+    <packet-layout :data="value" :tydi-element="(tydiElement as TydiGroup).items[key]" :display-type="displayType" :path="path.concat([key])" @hover="emission => emit('hover', emission)" :selected-path="selectedPath" />
   </template>
   <span class="packet-representation" v-else>
     {{ representation }}
@@ -95,6 +104,10 @@ const label = computed<string>(() => {
 
 .packet-layout.depth-0 {
   @apply my-0
+}
+
+.packet-layout.selected {
+  outline: solid 2px rgba(16,17,18,.3);
 }
 
 .group-packet {
