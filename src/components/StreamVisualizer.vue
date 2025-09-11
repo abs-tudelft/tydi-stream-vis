@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
-import type {Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
-import {computed, type PropType, ref, watch} from "vue";
+import type {DataEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
+import {computed, type PropType, ref} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
+import DataVector from "@/components/DataVector.vue";
+import PacketLayout from "@/components/PacketLayout.vue";
+import type {DisplayType} from "@/components/NumberFormatSelector.vue";
+import NumberFormatSelector from "@/components/NumberFormatSelector.vue";
+
 
 const props = defineProps({
   stream: {
@@ -27,6 +32,10 @@ const data = computed(() => {
 // watch(() => props.stream, () => {})
 
 const selectedStream = ref<TydiStream | null>(null)
+const selectedElement = ref<TransferEl | null>(null)
+const packetStructureDisplayType = ref<DisplayType>('decimal')
+const packetDataDisplayType = ref<DisplayType>('decimal')
+const hoveredPacketNode = ref<String[] | null>()
 
 const selectedIndexes = ref<number[]>([])
 
@@ -124,6 +133,8 @@ function elRenderer(el: Object | number | string | boolean | null): string {
 }
 
 function itemClick(item: TransferEl, stream: TydiStream) {
+  selectedStream.value = stream
+  selectedElement.value = item
   let i = 0
   const dataPath = stream.dataPathList.map(pathSegment => {
     return pathSegment instanceof ArrayIndex ? item.indexes[i++] : pathSegment.name
@@ -142,6 +153,10 @@ function elClasses(el: TransferEl) {
     'closes-highest': el.last[0] === '1'
     // transfer.data[j-1].last.includes('1') ? (transfer.data[j-1].lastParent.includes('1') ? 'kbd-violet' : 'kbd-fuchsia') : 'kbd-gray'"
   }
+}
+
+function dataVectorHover(path: string[]) {
+  hoveredPacketNode.value = path
 }
 
 </script>
@@ -186,7 +201,7 @@ function elClasses(el: TransferEl) {
                     <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"
                          :class="elClasses(transfer.data[j-1])"
                     >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
-                        stream.width
+                        stream.physicalWidth
                       }}</kbd>
                   </div>
                 </td>
@@ -200,7 +215,7 @@ function elClasses(el: TransferEl) {
     </div>
     <div class="divider divider-horizontal divider-primary"></div>
     <div class="min-w-0 flex-1/2">
-      <div class="sticky top-0">
+      <div class="sticky top-0 max-h-screen overflow-y-auto">
         <h2>Stream information</h2>
         <table class="table">
           <thead>
@@ -209,6 +224,7 @@ function elClasses(el: TransferEl) {
             <th>Value</th>
           </tr>
           </thead>
+          <tbody>
           <tr>
             <td>Name</td>
             <td v-if="selectedStream">
@@ -241,7 +257,65 @@ function elClasses(el: TransferEl) {
               <kbd>d = {{ selectedStream.d }}</kbd>, nested at <kbd>{{ selectedStream.dNesting }}</kbd> levels from root
             </td>
           </tr>
+          </tbody>
         </table>
+        <h2>Packet inspector</h2>
+        <template v-if="selectedElement && selectedStream">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>Packet number</td>
+            <td>
+              <kbd>{{ selectedElement.id }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>List indexing</td>
+            <td>
+              <kbd>{{ selectedElement.indexes }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Dimensionality information</td>
+            <td>
+              <kbd>[{{ selectedElement.lastParent }}]{{ selectedElement.last }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Packet data</td>
+            <td>
+              <kbd>{{ (selectedElement as DataEl).data ? selectedElement.data : "" }}</kbd>
+            </td>
+          </tr>
+          <tr>
+            <td>Packet layout</td>
+            <td>
+              Number format:
+              <number-format-selector v-model="packetStructureDisplayType"/>
+              <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetStructureDisplayType" :selected-path="hoveredPacketNode" />
+            </td>
+          </tr>
+          <tr>
+            <td>Packet data packing</td>
+            <td>
+              Number format:
+              <number-format-selector v-model="packetDataDisplayType"/>
+              <br>
+              <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDataDisplayType" :selected-path="hoveredPacketNode" />
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <h3>Raw packet data</h3>
+        <pre>{{ selectedElement }}</pre>
+        </template>
       </div>
     </div>
   </div>
