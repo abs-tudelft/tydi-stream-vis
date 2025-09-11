@@ -7,6 +7,7 @@ import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
 import DataVector from "@/components/DataVector.vue";
 import type {DisplayType} from "@/components/DataVector.vue";
+import PacketLayout from "@/components/PacketLayout.vue";
 
 const props = defineProps({
   stream: {
@@ -210,7 +211,7 @@ function dataVectorHover(path: string[]) {
     </div>
     <div class="divider divider-horizontal divider-primary"></div>
     <div class="min-w-0 flex-1/2">
-      <div class="sticky top-0 max-h-screen overflow-auto">
+      <div class="sticky top-0 max-h-screen overflow-y-auto">
         <h2>Stream information</h2>
         <table class="table">
           <thead>
@@ -290,6 +291,12 @@ function dataVectorHover(path: string[]) {
           </tr>
           <tr>
             <td>Packet layout</td>
+            <td>
+              <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDisplayType" />
+            </td>
+          </tr>
+          <tr>
+            <td>Packet data packing</td>
             <td>
               <ul class="menu menu-horizontal bg-base-200 rounded-box menu-sm mb-3 gap-1 p-1">
                 <li @click="packetDisplayType='decimal'"><a :class="packetDisplayType === 'decimal' ? 'menu-active' : ''">Decimal</a></li>
