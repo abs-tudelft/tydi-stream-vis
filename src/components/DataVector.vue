@@ -109,4 +109,8 @@ const isSelected = computed(() => {
   @apply outline-2 outline-blue-500;
 }
 
+.tooltip-content {
+  @apply select-none;
+}
+
 </style>
