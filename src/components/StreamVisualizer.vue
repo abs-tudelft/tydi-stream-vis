@@ -9,6 +9,9 @@ import DataVector from "@/components/DataVector.vue";
 import PacketLayout from "@/components/PacketLayout.vue";
 import type {DisplayType} from "@/components/NumberFormatSelector.vue";
 import NumberFormatSelector from "@/components/NumberFormatSelector.vue";
+import {useMainStore} from "@/stores/mainStore.ts";
+
+const store = useMainStore()
 
 
 const props = defineProps({
@@ -16,7 +19,6 @@ const props = defineProps({
     type: TydiStream,
     required: true,
   },
-  inputData: Object as PropType<jsonc.Node>,
 })
 
 const emit = defineEmits<{
@@ -25,8 +27,8 @@ const emit = defineEmits<{
 }>()
 
 const data = computed(() => {
-  if (!props.inputData) return {}
-  return jsonc.getNodeValue(props.inputData!)
+  if (!store.parsedData) return {}
+  return jsonc.getNodeValue(store.parsedData!)
 })
 
 // watch(() => props.stream, () => {})
