@@ -5,6 +5,9 @@ import {computed, ref, watch} from "vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import {type HighlightChars} from "@/components/CodeEditor.vue";
 import {generateSchema, type Schema} from "@/schemaParser.ts";
+import {useMainStore} from "@/stores/mainStore.ts";
+
+const store = useMainStore()
 
 const dataCode = ref('')
 const highlights = ref<HighlightChars[]>([])
@@ -35,6 +38,7 @@ const parsedData = computed(() => {
     return { error: error }
   }
   emit('data-input', parsed as jsonc.Node)
+  store.sourceData = parsed as jsonc.Node
   return parsed!
 })
 
