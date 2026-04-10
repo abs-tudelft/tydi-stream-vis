@@ -17,8 +17,9 @@ const data = computed(() => {
   return jsonc.getNodeValue(store.parsedData!)
 })
 
-const selectedStream = ref<TydiStream | null>(null)
-const selectedElement = ref<TransferEl | null>(null)
+const selectedStream = computed(() => store.selectedStream as TydiStream | null)
+const selectedElement = computed(() => store.selectedElement as DataEl | null)
+
 const packetStructureDisplayType = ref<DisplayType>('decimal')
 const packetDataDisplayType = ref<DisplayType>('decimal')
 const hoveredPacketNode = ref<String[] | null>()
@@ -166,7 +167,7 @@ function dataVectorHover(path: string[]) {
         <tr>
           <td>Packet data</td>
           <td>
-            <kbd>{{ (selectedElement as DataEl).data ? selectedElement.data : "" }}</kbd>
+            <kbd>{{ (selectedElement as DataEl).data ? (selectedElement as DataEl).data : "" }}</kbd>
           </td>
         </tr>
         <tr>
@@ -174,7 +175,7 @@ function dataVectorHover(path: string[]) {
           <td>
             Number format:
             <number-format-selector v-model="packetStructureDisplayType"/>
-            <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetStructureDisplayType" :selected-path="hoveredPacketNode" />
+            <packet-layout class="wrap-anywhere -mx-0.5!" :data="(selectedElement as DataEl).data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetStructureDisplayType" :selected-path="hoveredPacketNode" />
           </td>
         </tr>
         <tr>
@@ -183,7 +184,7 @@ function dataVectorHover(path: string[]) {
             Number format:
             <number-format-selector v-model="packetDataDisplayType"/>
             <br>
-            <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDataDisplayType" :selected-path="hoveredPacketNode" />
+            <data-vector class="wrap-anywhere -mx-0.5!" :data="(selectedElement as DataEl).data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDataDisplayType" :selected-path="hoveredPacketNode" />
           </td>
         </tr>
         </tbody>

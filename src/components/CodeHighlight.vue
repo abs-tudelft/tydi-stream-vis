@@ -21,7 +21,7 @@ import 'highlight.js/lib/languages/haskell';
 import 'highlight.js/lib/languages/scala';
 // Import your preferred styling (choose one)
 // import 'highlight.js/styles/atom-one-dark.css';
-import 'highlight.js/styles/github.css';
+// import 'highlight.js/styles/github.css';
 // import 'highlight.js/styles/dracula.css';
 
 export default defineComponent({

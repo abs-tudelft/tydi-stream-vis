@@ -3,6 +3,8 @@ import * as jsonc from "jsonc-parser";
 import * as Blockly from 'blockly/core'
 import {generateSchema, type Schema} from "@/schemaParser.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
+import {ref} from "vue";
+import type {TransferEl} from "@/Tydi/TransferTypes.ts";
 
 export const useMainStore = defineStore('main', {
     state: () => ({
@@ -11,9 +13,13 @@ export const useMainStore = defineStore('main', {
         blocklyState: {} as { [key: string]: any },
         sourceData: null as jsonc.Node | null,
         tydiSchema: [] as TydiStreamlet[],
+
         streamVisualized: null as TydiStream | null,
         selectedBlock: null as Blockly.BlockSvg | null,
         selectedPath: null as jsonc.JSONPath | null,
+        // Stream and packet inspection
+        selectedStream: null as TydiStream | null,
+        selectedElement: null as TransferEl | null,
 
         tlCode: '// Start by creating a data structure',
         chiselCode: '// Start by creating a data structure',

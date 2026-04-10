@@ -4,6 +4,7 @@
 @import "./preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "dockview-vue/dist/styles/dockview.css";
+@import "highlight.js/styles/atom-one-dark.css";
 
 @plugin "daisyui";
 

@@ -1,19 +1,7 @@
 <template>
-  <div>
-    <div class="mt-4 mb-2 flex space-x-4 py-2 justify-center items-center">
-      <span>Tydi structure: </span>
-      <button @click="blocklySaveLS" class="btn btn-primary px-4 rounded">
-        Save
-      </button>
-      <button @click="blocklyLoadLS" class="btn btn-secondary rounded">
-        Load
-      </button>
-      <button @click="showCanvas = !showCanvas" class="btn btn-neutral rounded">
-        Toggle visibility
-      </button>
-    </div>
-
-    <div ref="blocklyDiv" v-show="showCanvas" style="height: 80vh" class="blockly-app-wrapper"></div>
+  <div class="h-full">
+    <!-- Todo: maybe add save and load buttons back somehow -->
+    <div ref="blocklyDiv" v-show="showCanvas" class="h-full"></div>
   </div>
 </template>
 

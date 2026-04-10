@@ -56,8 +56,6 @@ import hljs from 'highlight.js';
 // Import the languages you want to support
 import 'highlight.js/lib/languages/javascript';
 import 'highlight.js/lib/languages/typescript';
-// Import your preferred styling
-import 'highlight.js/styles/atom-one-dark.css';
 
 export interface HighlightChars { start: number, length: number, className?: string, type?: string }
 export interface HighlightLines { startLine: number, endLine: number, className?: string, type?: string }

@@ -14,9 +14,6 @@ const data = computed(() => {
   return jsonc.getNodeValue(store.parsedData!)
 })
 
-const selectedStream = ref<TydiStream | null>(null)
-const selectedElement = ref<TransferEl | null>(null)
-
 const selectedIndexes = ref<number[]>([])
 
 const physicalStreams = computed(() => {
@@ -101,8 +98,6 @@ function elRenderer(el: Object | number | string | boolean | null): string {
 }
 
 function itemClick(item: TransferEl, stream: TydiStream) {
-  selectedStream.value = stream
-  selectedElement.value = item
   let i = 0
   const dataPath = stream.dataPathList.map(pathSegment => {
     return pathSegment instanceof ArrayIndex ? item.indexes[i++] : pathSegment.name
@@ -110,6 +105,8 @@ function itemClick(item: TransferEl, stream: TydiStream) {
   dataPath.push(item.indexes[i])
 
   store.$patch((state) => {
+    state.selectedStream = stream
+    state.selectedElement = item
     if (stream._block !== null) {
       state.selectedBlock = stream._block as Blockly.BlockSvg
     }
@@ -132,7 +129,7 @@ function elClasses(el: TransferEl) {
   <div class="w-full h-full overflow-auto p-4">
     <div>Number of physical streams: {{ physicalStreams?.length ?? 0 }}</div>
     <template v-for="(stream, i) in physicalStreams">
-      <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="selectedStream = stream">select</a></h3>
+      <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="store.selectedStream = stream">select</a></h3>
       <div>Stream {{ stream.name }} at <kbd>{{ stream.tydiPath }}</kbd> of type <kbd>{{ stream.physRepr() }}</kbd>
         that
         references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
