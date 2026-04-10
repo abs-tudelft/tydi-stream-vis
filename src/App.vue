@@ -1,23 +1,54 @@
 <template>
-  <DataImport ref="dataImport" />
-  <div class="divider">⮟ To Tydi representation ⮟</div>
-  <BlocklyCanvas ref="blockly" />
-  <div class="divider">⮟ Physical streams and transfer simulation ⮟</div>
-  <StreamVisualizer v-if="store.streamVisualized" />
-  <div v-else>
-    <em>Create a Tydi structure to get started with the visualization</em>
-  </div>
+  <dockview-vue
+    @ready="onReady"
+    :theme="themeLight"
+    style="height: 100vh"
+  >
+  </dockview-vue>
 <!--  <stream-simulator />-->
 </template>
 
-<script lang="ts" setup>
+
+<script lang="ts">
 import BlocklyCanvas from './components/BlocklyCanvas.vue'
 import DataImport from "@/components/DataImport.vue";
 import StreamVisualizer from "@/components/StreamVisualizer.vue";
+
+export default {
+  components: {
+    'blockly-canvas': BlocklyCanvas,
+    'data-import': DataImport,
+    'stream-visualizer': StreamVisualizer,
+  }
+}
+</script>
+
+<script lang="ts" setup>
 import {useMainStore} from "@/stores/mainStore.ts";
+import {type DockviewReadyEvent, DockviewVue, themeLight} from "dockview-vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const store = useMainStore()
+
+function onReady(event: DockviewReadyEvent) {
+  const importPanel = event.api.addPanel({
+    id: 'data_import',
+    component: 'data-import',
+    title: "Data import"
+  })
+  event.api.addPanel({
+    id: 'blockly_canvas',
+    component: 'blockly-canvas',
+    title: "Tydi structure builder",
+  })
+  event.api.addPanel({
+    id: 'stream_visualizer',
+    component: 'stream-visualizer',
+    title: "Stream visualizer",
+  })
+  importPanel.api.setActive()
+  // event.api.activePanel = importPanel
+}
 
 </script>
 

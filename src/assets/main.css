@@ -3,6 +3,8 @@
 /*@import "tailwindcss/preflight.css" layer(base);*/
 @import "./preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
+@import "dockview-vue/dist/styles/dockview.css";
+
 @plugin "daisyui";
 
 @layer base {
