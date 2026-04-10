@@ -14,6 +14,10 @@ export const useMainStore = defineStore('main', {
         streamVisualized: null as TydiStream | null,
         selectedBlock: null as Blockly.BlockSvg | null,
         selectedPath: null as jsonc.JSONPath | null,
+
+        tlCode: '// Start by creating a data structure',
+        chiselCode: '// Start by creating a data structure',
+        clashCode: '-- Start by creating a data structure',
     }),
     getters: {
         parsedData(state): jsonc.Node | null {

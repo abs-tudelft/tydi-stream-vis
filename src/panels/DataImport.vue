@@ -2,7 +2,7 @@
 import * as jsonc from 'jsonc-parser';
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {computed, ref, watch} from "vue";
-import CodeEditor from "@/components/CodeEditor.vue";
+import CodeEditorFullSize from "@/components/CodeEditorFullSize.vue";
 import {type HighlightChars} from "@/components/CodeEditor.vue";
 import {useMainStore} from "@/stores/mainStore.ts";
 
@@ -50,11 +50,7 @@ defineExpose({select})
 </script>
 
 <template>
-  <div class="w-full flex">
-    <code-editor class="grow flex-1/2" v-model="store.sourceJson" :highlights="highlights" language="javascript" title="Input data" />
-    <div class="divider divider-horizontal text-center">⮞<br> I<br>n<br>f<br>e<br>r<br> ⮞</div>
-    <code-highlight class="grow flex-1/2" :code="schemaCode" language="javascript" title="Inferred schema" />
-  </div>
+  <code-editor-full-size v-model="store.sourceJson" :highlights="highlights" language="javascript" title="Input data" />
 </template>
 
 <style scoped>

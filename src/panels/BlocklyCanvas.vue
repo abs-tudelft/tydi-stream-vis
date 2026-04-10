@@ -14,26 +14,6 @@
     </div>
 
     <div ref="blocklyDiv" v-show="showCanvas" style="height: 80vh" class="blockly-app-wrapper"></div>
-
-    <div class="divider mb-2">⮟ Interface code generation ⮟</div>
-    <div role="tablist" class="tabs tabs-border">
-      <span class="tab text-black! dark:text-gray-400! pl-0 cursor-default">Show code for:</span>
-      <a v-for="option in selectionOptions" role="tab" class="tab"
-         :class="{'tab-active': selectedOption === option}"
-         @click="selectedOption = option"
-      >{{ option }}</a>
-    </div>
-    <div class="w-full flex gap-x-4 mt-4" v-show="selectedOption !== 'none'" key="code wrapper">
-      <code-highlight key="tydilang" v-show="(['all', 'tydilang'] as SelectedTab[]).includes(selectedOption)"
-                      :code="tlCode" language="scala" title="Tydi-Lang code"
-                      class="flex-1/3 min-w-0" />
-      <code-highlight key="chisel" v-show="(['all', 'chisel'] as SelectedTab[]).includes(selectedOption)"
-                      :code="chiselCode" language="scala" title="Tydi-Chisel code"
-                      class="flex-1/3 min-w-0" />
-      <code-highlight key="clash" v-show="(['all', 'clash'] as SelectedTab[]).includes(selectedOption)"
-                      :code="clashCode" language="haskell" title="Tydi-Clash code"
-                      class="flex-1/3 min-w-0" />
-    </div>
   </div>
 </template>
 
@@ -47,7 +27,6 @@ import type {IDockviewPanelProps} from 'dockview-vue'
 import toolbox from "@/blocks/toolbox.ts";
 import {generateTLCode} from "@/blocks/tlGenerator.ts";
 import {generateChiselCode} from "@/blocks/ChiselGenerator.ts";
-import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
@@ -63,17 +42,10 @@ import {
 } from "@/blocks/dslBlocks.ts";
 import {useMainStore} from "@/stores/mainStore.ts";
 
-type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
-const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
-const selectedOption = ref<SelectedTab>("tydilang")
-
 const showCanvas = ref<boolean>(true)
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = ref<Blockly.WorkspaceSvg | null>(null)
-const tlCode = ref('// Start by creating a data structure')
-const chiselCode = ref('// Start by creating a data structure')
-const clashCode = ref('-- Start by creating a data structure')
 
 const tydiStructures = ref<TydiStreamlet[]>([])
 const tydiSteams = ref<TydiStream[]>([])
@@ -325,9 +297,12 @@ function updateCode(event: any) {
   const _chiselCode = generateChiselCode(_workspace);
   // @ts-ignore
   const _clashCode = generateClashCode(_workspace);
-  tlCode.value = _tlCode;
-  chiselCode.value = _chiselCode;
-  clashCode.value = _clashCode;
+  // Write generated code to the store state
+  store.$patch((state) => {
+    state.tlCode = _tlCode;
+    state.chiselCode = _chiselCode;
+    state.clashCode = _clashCode;
+  })
 }
 
 function updateStructure(event: any) {

@@ -5,10 +5,6 @@ import {computed, type PropType, ref} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
-import DataVector from "@/components/DataVector.vue";
-import PacketLayout from "@/components/PacketLayout.vue";
-import type {DisplayType} from "@/components/NumberFormatSelector.vue";
-import NumberFormatSelector from "@/components/NumberFormatSelector.vue";
 import {useMainStore} from "@/stores/mainStore.ts";
 
 const store = useMainStore()
@@ -20,9 +16,6 @@ const data = computed(() => {
 
 const selectedStream = ref<TydiStream | null>(null)
 const selectedElement = ref<TransferEl | null>(null)
-const packetStructureDisplayType = ref<DisplayType>('decimal')
-const packetDataDisplayType = ref<DisplayType>('decimal')
-const hoveredPacketNode = ref<String[] | null>()
 
 const selectedIndexes = ref<number[]>([])
 
@@ -31,19 +24,6 @@ const physicalStreams = computed(() => {
   const streams = store.streamVisualized.findStreams();
   selectedIndexes.value = new Array<number>(streams.length).fill(0);
   return streams
-})
-
-const firstStreamItems = computed(() => {
-  if (physicalStreams.value === undefined) return []
-  return physicalStreams.value[0].getItemsFlat
-})
-
-const relativePaths = computed(() => {
-  if (physicalStreams.value === undefined) return []
-  return physicalStreams.value.map(s => { return {
-    parentPath: s.parent!.dataPath!,
-    relativePath: s.dataPath!.replace(s.parent!.dataPath!, "")
-  }})
 })
 
 /**
@@ -146,169 +126,58 @@ function elClasses(el: TransferEl) {
   }
 }
 
-function dataVectorHover(path: string[]) {
-  hoveredPacketNode.value = path
-}
-
 </script>
 
 <template>
-  <div class="flex w-full">
-    <div class="min-w-0 flex-1/2">
-      <div>Number of physical streams: {{ physicalStreams?.length ?? 0 }}</div>
-      <template v-for="(stream, i) in physicalStreams">
-        <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="selectedStream = stream">select</a></h3>
-        <div>Stream {{ stream.name }} at <kbd>{{ stream.tydiPath }}</kbd> of type <kbd>{{ stream.physRepr() }}</kbd>
-          that
-          references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
-        </div>
-        <strong class="my-3 block">Stream elements</strong>
-        <div class="overflow-y-visible">
-          <div class="overflow-x-auto" style="margin-top: -20em; padding-top: 20em">
-            <table class="table table-pin-cols">
-              <thead>
-              <tr class="text-nowrap">
-                <th class="z-10">Transfer #</th>
-                <th v-for="j in dataTransfers[i].length">{{ j }}</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="j in stream.n">
-                <th class="z-10">Lane {{ j }}</th>
-                <td v-for="transfer in dataTransfers[i]">
-                  <div class="tooltip cursor-pointer" v-if="transfer.data[j-1] !== undefined">
-                    <div class="tooltip-content z-99">
-                      <div class="">
-                        Element #{{ j }}<br>
-                        Last: <span v-if="transfer.data[j-1].lastParent" class="text-gray-500">[{{
-                          transfer.data[j - 1].lastParent
-                        }}]</span>{{ transfer.data[j - 1].last }}
-                        <pre v-if="transfer.data[j-1].data !== undefined"
-                             :class="{'text-left': typeof transfer.data[j-1].data === 'object' && transfer.data[j-1].data !== null}"
-                        >{{ transfer.data[j - 1].data ?? '∅' }}</pre>
-                        <div v-else>Empty item</div>
-                      </div>
-                    </div>
-                    <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"
-                         :class="elClasses(transfer.data[j-1])"
-                    >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
-                        stream.physicalWidth
-                      }}</kbd>
-                  </div>
-                </td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <hr class="my-3 border-gray-300">
-      </template>
-    </div>
-    <div class="divider divider-horizontal divider-primary"></div>
-    <div class="min-w-0 flex-1/2">
-      <div class="sticky top-0 max-h-screen overflow-y-auto">
-        <h2>Stream information</h2>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Property</th>
-            <th>Value</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td>Name</td>
-            <td v-if="selectedStream">
-              <kbd>{{ selectedStream.name ? selectedStream.name : 'nameless stream' }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>References</td>
-            <td v-if="selectedStream">
-              <kbd>{{ selectedStream.dataPath ? selectedStream.dataPath : 'root array' }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>Packet layout</td>
-            <td v-if="selectedStream">
-              <template v-for="item in selectedStream.getItemsFlat()">
-                [<kbd>{{ item.width }}</kbd> bits @ <kbd>{{ item.relativePathList.length ? listToPath(item.relativePathList) : '.' }}</kbd>]
-              </template>
-            </td>
-          </tr>
-          <tr>
-            <td>Stream type</td>
-            <td v-if="selectedStream">
-              <kbd>{{ selectedStream.physRepr() }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>Dimension</td>
-            <td v-if="selectedStream">
-              <kbd>d = {{ selectedStream.d }}</kbd>, nested at <kbd>{{ selectedStream.dNesting }}</kbd> levels from root
-            </td>
-          </tr>
-          </tbody>
-        </table>
-        <h2>Packet inspector</h2>
-        <template v-if="selectedElement && selectedStream">
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Property</th>
-            <th>Value</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td>Packet number</td>
-            <td>
-              <kbd>{{ selectedElement.id }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>List indexing</td>
-            <td>
-              <kbd>{{ selectedElement.indexes }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>Dimensionality information</td>
-            <td>
-              <kbd>[{{ selectedElement.lastParent }}]{{ selectedElement.last }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>Packet data</td>
-            <td>
-              <kbd>{{ (selectedElement as DataEl).data ? selectedElement.data : "" }}</kbd>
-            </td>
-          </tr>
-          <tr>
-            <td>Packet layout</td>
-            <td>
-              Number format:
-              <number-format-selector v-model="packetStructureDisplayType"/>
-              <packet-layout class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetStructureDisplayType" :selected-path="hoveredPacketNode" />
-            </td>
-          </tr>
-          <tr>
-            <td>Packet data packing</td>
-            <td>
-              Number format:
-              <number-format-selector v-model="packetDataDisplayType"/>
-              <br>
-              <data-vector class="wrap-anywhere -mx-0.5!" :data="selectedElement.data" :tydi-element="selectedStream.e" :path="[]" @hover="dataVectorHover" :display-type="packetDataDisplayType" :selected-path="hoveredPacketNode" />
-            </td>
-          </tr>
-          </tbody>
-        </table>
-
-        <h3>Raw packet data</h3>
-        <pre>{{ selectedElement }}</pre>
-        </template>
+  <div class="w-full h-full overflow-auto p-4">
+    <div>Number of physical streams: {{ physicalStreams?.length ?? 0 }}</div>
+    <template v-for="(stream, i) in physicalStreams">
+      <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="selectedStream = stream">select</a></h3>
+      <div>Stream {{ stream.name }} at <kbd>{{ stream.tydiPath }}</kbd> of type <kbd>{{ stream.physRepr() }}</kbd>
+        that
+        references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
       </div>
-    </div>
+      <strong class="my-3 block">Stream elements</strong>
+      <div class="overflow-y-visible">
+        <div class="overflow-x-auto" style="margin-top: -20em; padding-top: 20em">
+          <table class="table table-pin-cols">
+            <thead>
+            <tr class="text-nowrap">
+              <th class="z-10">Transfer #</th>
+              <th v-for="j in dataTransfers[i].length">{{ j }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="j in stream.n">
+              <th class="z-10">Lane {{ j }}</th>
+              <td v-for="transfer in dataTransfers[i]">
+                <div class="tooltip cursor-pointer" v-if="transfer.data[j-1] !== undefined">
+                  <div class="tooltip-content z-99">
+                    <div class="">
+                      Element #{{ j }}<br>
+                      Last: <span v-if="transfer.data[j-1].lastParent" class="text-gray-500">[{{
+                        transfer.data[j - 1].lastParent
+                      }}]</span>{{ transfer.data[j - 1].last }}
+                      <pre v-if="transfer.data[j-1].data !== undefined"
+                           :class="{'text-left': typeof transfer.data[j-1].data === 'object' && transfer.data[j-1].data !== null}"
+                      >{{ transfer.data[j - 1].data ?? '∅' }}</pre>
+                      <div v-else>Empty item</div>
+                    </div>
+                  </div>
+                  <kbd @click="itemClick(transfer.data[j-1], stream)" class="transfer-element"
+                       :class="elClasses(transfer.data[j-1])"
+                  >{{ elRenderer(transfer.data[j - 1].data ? transfer.data[j - 1].data : null) }} | b{{
+                      stream.physicalWidth
+                    }}</kbd>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <hr class="my-3 border-gray-300">
+    </template>
   </div>
 
 </template>

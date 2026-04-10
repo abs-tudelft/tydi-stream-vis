@@ -12,12 +12,16 @@
 import BlocklyCanvas from './panels/BlocklyCanvas.vue'
 import DataImport from "@/panels/DataImport.vue";
 import StreamVisualizer from "@/panels/StreamVisualizer.vue";
+import PacketInspector from "@/panels/PacketInspector.vue";
+import CodeGen from "@/panels/CodeGen.vue";
 
 export default {
   components: {
     'blockly-canvas': BlocklyCanvas,
     'data-import': DataImport,
     'stream-visualizer': StreamVisualizer,
+    'packet-inspector': PacketInspector,
+    'code-gen': CodeGen,
   }
 }
 </script>
@@ -35,15 +39,25 @@ function onReady(event: DockviewReadyEvent) {
     component: 'data-import',
     title: "Data import"
   })
-  event.api.addPanel({
+  const blocklyPanel = event.api.addPanel({
     id: 'blockly_canvas',
     component: 'blockly-canvas',
     title: "Tydi structure builder",
   })
-  event.api.addPanel({
+  const visualizerPanel = event.api.addPanel({
     id: 'stream_visualizer',
     component: 'stream-visualizer',
     title: "Stream visualizer",
+  })
+  const inspectorPanel = event.api.addPanel({
+    id: 'packet_inspector',
+    component: 'packet-inspector',
+    title: "Packet inspector",
+  })
+  const codeGenPanel = event.api.addPanel({
+    id: 'code_gen',
+    component: 'code-gen',
+    title: "Code generator",
   })
   importPanel.api.setActive()
   // event.api.activePanel = importPanel
