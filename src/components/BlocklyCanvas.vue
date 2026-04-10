@@ -50,7 +50,6 @@ import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
-import * as jsonc from "jsonc-parser";
 import type {Schema} from "@/schemaParser.ts";
 import {
   bitBArgs, bitBDef,
@@ -66,11 +65,6 @@ import {useMainStore} from "@/stores/mainStore.ts";
 type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
 const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
 const selectedOption = ref<SelectedTab>("tydilang")
-
-const emit = defineEmits<{
-  select: [path: jsonc.JSONPath | null],
-  'schema-update': [schema: TydiStreamlet[]],
-}>()
 
 const showCanvas = ref<boolean>(true)
 
@@ -166,6 +160,7 @@ function processSchema(schema: any) {
   processNode(schema, streamlet, streamlet.getInput(streamletBArgs.STREAM)?.connection!, "")
 
   // After creating the structure, save it to the store
+  // Fixme it seems like this does not include the mappings
   store.blocklyState = Blockly.serialization.workspaces.save(workspace)
 
   function mappingLabel(path: string) {
@@ -336,13 +331,17 @@ function updateStructure(event: any) {
     structures.push(TydiStreamlet.fromBlock(topBlock))
   }
   tydiStructures.value = structures
-  emit("schema-update", structures)
   store.$patch({
     tydiSchema: structures,
     streamVisualized: structures[0].streams['stream']
   })
   tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
+
+watch(() => store.selectedBlock, (newBlock, oldBlock) => {
+  if (newBlock === null) return
+  setSelection(newBlock as Blockly.BlockSvg)
+})
 
 function setSelection(block: Blockly.BlockSvg) {
   // Blockly.
@@ -366,9 +365,9 @@ function updateSelection(event: any) {
   selectedPath.value = selectedBlock.value!.getFieldValue("MAPPING")
   if (!selectedPath.value) {
     if (selected.type === streamBDef.type) {
-      emit("select", [])
+      store.selectedPath = []
     } else {
-      emit("select", null)
+      store.selectedPath = null
     }
     return
   }
@@ -382,7 +381,7 @@ function updateSelection(event: any) {
   })
   selectedBlockType.value = selectedBlock.value!.type
   console.log("Selected block with path", selectedPath.value)
-  emit("select", pathListToEmit)
+  store.selectedPath = pathListToEmit
 }
 
 onMounted(() => {

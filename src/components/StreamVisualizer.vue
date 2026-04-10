@@ -13,25 +13,10 @@ import {useMainStore} from "@/stores/mainStore.ts";
 
 const store = useMainStore()
 
-
-const props = defineProps({
-  stream: {
-    type: TydiStream,
-    required: true,
-  },
-})
-
-const emit = defineEmits<{
-  selectData: [path: jsonc.JSONPath],
-  selectBlock: [block: Blockly.BlockSvg],
-}>()
-
 const data = computed(() => {
   if (!store.parsedData) return {}
   return jsonc.getNodeValue(store.parsedData!)
 })
-
-// watch(() => props.stream, () => {})
 
 const selectedStream = ref<TydiStream | null>(null)
 const selectedElement = ref<TransferEl | null>(null)
@@ -42,7 +27,8 @@ const hoveredPacketNode = ref<String[] | null>()
 const selectedIndexes = ref<number[]>([])
 
 const physicalStreams = computed(() => {
-  const streams = props.stream.findStreams();
+  if (!store.streamVisualized) return []
+  const streams = store.streamVisualized.findStreams();
   selectedIndexes.value = new Array<number>(streams.length).fill(0);
   return streams
 })
@@ -142,10 +128,13 @@ function itemClick(item: TransferEl, stream: TydiStream) {
     return pathSegment instanceof ArrayIndex ? item.indexes[i++] : pathSegment.name
   })
   dataPath.push(item.indexes[i])
-  if (stream._block !== null) {
-    emit("selectBlock", stream._block as Blockly.BlockSvg)
-  }
-  emit("selectData", dataPath)
+
+  store.$patch((state) => {
+    if (stream._block !== null) {
+      state.selectedBlock = stream._block as Blockly.BlockSvg
+    }
+    state.selectedPath = dataPath
+  })
 }
 
 function elClasses(el: TransferEl) {

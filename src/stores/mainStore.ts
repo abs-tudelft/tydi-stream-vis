@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import * as jsonc from "jsonc-parser";
+import * as Blockly from 'blockly/core'
 import {generateSchema, type Schema} from "@/schemaParser.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 
@@ -11,6 +12,8 @@ export const useMainStore = defineStore('main', {
         sourceData: null as jsonc.Node | null,
         tydiSchema: [] as TydiStreamlet[],
         streamVisualized: null as TydiStream | null,
+        selectedBlock: null as Blockly.BlockSvg | null,
+        selectedPath: null as jsonc.JSONPath | null,
     }),
     getters: {
         parsedData(state): jsonc.Node | null {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as jsonc from 'jsonc-parser';
 import CodeHighlight from "@/components/CodeHighlight.vue";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import {type HighlightChars} from "@/components/CodeEditor.vue";
 import {useMainStore} from "@/stores/mainStore.ts";
@@ -15,7 +15,11 @@ const schemaCode = computed(() => {
   return JSON.stringify(store.dataSchema, null, 2)
 })
 
-function select(elementPath: ("string" | "number")[] | null) {
+watch(() => store.selectedPath, (newPath, oldPath) => {
+  select(newPath)
+})
+
+function select(elementPath: (string | number)[] | null) {
   if (elementPath === null) {
     highlights.value = []
     return
