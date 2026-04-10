@@ -38,14 +38,15 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref, watch} from 'vue'
+import {onMounted, type PropType, ref, watch} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
-import '@/blocks/dslBlocks'
+import '@/blocks/dslBlocks.ts'
+import type {IDockviewPanelProps} from 'dockview-vue'
 import toolbox from "@/blocks/toolbox.ts";
-import {generateTLCode} from "@/blocks/tlGenerator";
-import {generateChiselCode} from "@/blocks/ChiselGenerator";
+import {generateTLCode} from "@/blocks/tlGenerator.ts";
+import {generateChiselCode} from "@/blocks/ChiselGenerator.ts";
 import CodeHighlight from "@/components/CodeHighlight.vue";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
@@ -80,6 +81,19 @@ const tydiSteams = ref<TydiStream[]>([])
 const selectedBlockType = ref<string | null>(null)
 const selectedBlock = ref<Blockly.BlockSvg | null>(null)
 const selectedPath = ref<string | null>(null)
+
+const props = defineProps({
+  params: {
+    type: Object as PropType<IDockviewPanelProps>,
+    required: true,
+  }
+})
+
+// Resize the Blockly canvas when the tab is resized
+props.params.api.onDidDimensionsChange((event) => {
+  if (workspace.value === null) return
+  Blockly.svgResize(workspace.value as Blockly.WorkspaceSvg);
+})
 
 const store = useMainStore()
 

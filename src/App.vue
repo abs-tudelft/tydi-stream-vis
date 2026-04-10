@@ -2,17 +2,16 @@
   <dockview-vue
     @ready="onReady"
     :theme="themeLight"
-    style="height: 100vh"
+    style="height: 100%"
   >
   </dockview-vue>
-<!--  <stream-simulator />-->
 </template>
 
 
 <script lang="ts">
-import BlocklyCanvas from './components/BlocklyCanvas.vue'
-import DataImport from "@/components/DataImport.vue";
-import StreamVisualizer from "@/components/StreamVisualizer.vue";
+import BlocklyCanvas from './panels/BlocklyCanvas.vue'
+import DataImport from "@/panels/DataImport.vue";
+import StreamVisualizer from "@/panels/StreamVisualizer.vue";
 
 export default {
   components: {
