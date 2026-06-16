@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, type PropType, ref, shallowRef, watch} from 'vue'
+import {markRaw, onMounted, type PropType, ref, shallowRef, watch} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
@@ -133,7 +133,7 @@ function processSchema(schema: any) {
   // After creating the structure, save it to the store
   // Fixme it seems like this does not include the mappings
   store.$patch((state) => {
-    state.blocklyState = shallowRef(Blockly.serialization.workspaces.save(workspace))
+    state.blocklyState = markRaw(Blockly.serialization.workspaces.save(workspace))
   })
 
   function mappingLabel(path: string) {
@@ -299,7 +299,7 @@ function updateStructure(event: any) {
 
   store.$patch((state) => {
     // Save updated structure to the store so it can be restored later
-    store.blocklyState = shallowRef(Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg))
+    store.blocklyState = markRaw(Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg))
 
     const topBlocks = _workspace.getTopBlocks(false)
     const structures = [] as TydiStreamlet[]
@@ -307,9 +307,9 @@ function updateStructure(event: any) {
       if (topBlock.type !== streamletBDef.type) continue
       structures.push(TydiStreamlet.fromBlock(topBlock))
     }
-    store.tydiSchema = structures
+    store.tydiSchema = markRaw(structures)
     if (structures.length) {
-      state.streamVisualized = structures[0].streams['stream']
+      state.streamVisualized = markRaw(structures[0].streams['stream'])
     }
   })
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {TydiStream} from "@/Tydi/TydiTypes.ts";
 import type {DataEl, Transfer, TransferEl} from "@/Tydi/TransferTypes.ts";
-import {computed, type PropType, ref} from "vue";
+import {computed, markRaw, type PropType, ref} from "vue";
 import * as jsonc from 'jsonc-parser';
 import * as Blockly from "blockly/core";
 import {ArrayIndex, listToPath, ObjectIndex} from "@/Tydi/utils.ts";
@@ -105,10 +105,10 @@ function itemClick(item: TransferEl, stream: TydiStream) {
   dataPath.push(item.indexes[i])
 
   store.$patch((state) => {
-    state.selectedStream = stream
-    state.selectedElement = item
+    state.selectedStream = markRaw(stream)
+    state.selectedElement = markRaw(item)
     if (stream._block !== null) {
-      state.selectedBlock = stream._block as Blockly.BlockSvg
+      state.selectedBlock = markRaw(stream._block as Blockly.BlockSvg)
     }
     state.selectedPath = dataPath
   })

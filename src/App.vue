@@ -29,6 +29,7 @@ export default {
 <script lang="ts" setup>
 import {useMainStore} from "@/stores/mainStore.ts";
 import {type DockviewReadyEvent, DockviewVue, themeLight} from "dockview-vue";
+import {markRaw} from "vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
 const store = useMainStore()
@@ -83,11 +84,11 @@ function onReady(event: DockviewReadyEvent) {
   // Store the panels in the store so that they can be accessed from anywhere
   store.$patch({
     panels: {
-      dataImport: importPanel,
-      blocklyCanvas: blocklyPanel,
-      streamVisualizer: visualizerPanel,
-      packetInspector: inspectorPanel,
-      codeGen: codeGenPanel
+      dataImport: markRaw(importPanel),
+      blocklyCanvas: markRaw(blocklyPanel),
+      streamVisualizer: markRaw(visualizerPanel),
+      packetInspector: markRaw(inspectorPanel),
+      codeGen: markRaw(codeGenPanel),
     }
   })
 }
