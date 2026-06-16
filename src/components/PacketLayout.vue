@@ -92,7 +92,7 @@ const isSelected = computed(() => {
   @apply bg-gray-100;
   @apply dark:bg-gray-700;
   @apply text-gray-600;
-  @apply dark:text-gray-300;
+  @apply dark:text-gray-100;
   @apply font-mono;
   @apply whitespace-nowrap;
   @apply overflow-hidden;
@@ -105,19 +105,23 @@ const isSelected = computed(() => {
 }
 
 .packet-layout.selected {
-  outline: solid 2px rgba(16,17,18,.3);
+  @apply outline-2 outline-[rgba(16,17,18,.3)];
+  @apply dark:outline-white;
 }
 
 .group-packet {
   @apply border-green-400 bg-green-50;
+  @apply dark:bg-green-950;
 }
 
 .union-packet {
   @apply border-yellow-400 bg-yellow-50;
+  @apply dark:bg-yellow-950;
 }
 
 .bits-packet {
   @apply border-blue-400 bg-blue-50;
+  @apply dark:bg-blue-950;
   /*@apply pl-2;*/
 }
 

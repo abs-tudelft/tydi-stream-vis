@@ -90,14 +90,17 @@ const isSelected = computed(() => {
 
 .data-vector.depth-1 {
   @apply bg-amber-100;
+  @apply dark:bg-yellow-800;
 }
 
 .data-vector.depth-2 {
   @apply bg-red-100;
+  @apply dark:bg-red-950;
 }
 
 .data-vector.depth-3 {
   @apply bg-purple-100;
+  @apply dark:bg-purple-800;
 }
 
 .data-vector {

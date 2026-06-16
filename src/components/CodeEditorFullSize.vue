@@ -1,24 +1,22 @@
 <template>
   <div class="code-editor-container">
-    <div class="flex justify-between items-center bg-gray-800 text-white dark:bg-gray-600 p-2 rounded-t-lg">
+    <div class="absolute right-0 flex space-x-2 items-center bg-gray-900 text-white dark:bg-gray-600 p-2 z-10">
       <div class="text-sm font-medium">{{ title }}</div>
-      <div class="flex space-x-2">
-        <button
-          @click="copyCode"
-          class="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-        >
-          {{ copied ? 'Copied!' : 'Copy' }}
-        </button>
-        <button
-          @click="clearCode"
-          class="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-        >
-          Clear
-        </button>
-      </div>
+      <button
+        @click="copyCode"
+        class="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+      >
+        {{ copied ? 'Copied!' : 'Copy' }}
+      </button>
+      <button
+        @click="clearCode"
+        class="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+      >
+        Clear
+      </button>
     </div>
 
-    <div class="relative layer-wrapper">
+    <div class="layer-wrapper">
       <!-- Highlighted background layers -->
       <pre
         ref="markingsLayer"
@@ -39,7 +37,7 @@
         @input="handleInput"
         @scroll="syncScroll"
         @keydown="handleKeydown"
-        class="editor-textarea rounded-b-lg m-0 absolute inset-0 z-20 resize-none"
+        class="editor-textarea m-0 absolute inset-0 z-20 resize-none"
         :placeholder="placeholder"
         spellcheck="false"
         autocomplete="off"
@@ -61,7 +59,7 @@ export interface HighlightChars { start: number, length: number, className?: str
 export interface HighlightLines { startLine: number, endLine: number, className?: string, type?: string }
 
 export default defineComponent({
-  name: 'CodeEditor',
+  name: 'CodeEditorFullSize',
   props: {
     modelValue: {
       type: String as PropType<string>,
@@ -170,7 +168,7 @@ export default defineComponent({
 
       // Convert line-based highlights to character-based if needed
       const charHighlights = highlights.map(highlight => {
-        if (highlight.startLine !== undefined) {
+        if ((highlight as HighlightLines).startLine !== undefined) {
           return convertLineToCharHighlight(text, highlight as HighlightLines);
         }
         return highlight as HighlightChars;
@@ -312,16 +310,19 @@ export default defineComponent({
 @reference "../assets/main.css";
 
 .code-editor-container {
-  @apply font-mono text-sm overflow-hidden rounded-lg;
+  @apply font-mono text-sm overflow-hidden;
+  @apply h-full w-full;
   position: relative;
 }
 
 .layer-wrapper {
+  @apply relative;
+  @apply h-full w-full;
   background-color: #282c34;
-  @apply rounded-b-lg;
 }
 
 .code-layer {
+  @apply h-full w-full;
   @apply overflow-hidden;
   /*@apply bg-gray-50 dark:bg-gray-900;*/
   @apply block w-full;
@@ -357,8 +358,7 @@ export default defineComponent({
 /* Ensure both layers have the same dimensions */
 .code-layer code,
 .editor-textarea {
-  min-height: 200px;
-  max-height: 60vh;
+  height: 100%;
   overflow-y: auto;
 }
 

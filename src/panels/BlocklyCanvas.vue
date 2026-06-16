@@ -1,52 +1,20 @@
 <template>
-  <div>
-    <div class="mt-4 mb-2 flex space-x-4 py-2 justify-center items-center">
-      <span>Tydi structure: </span>
-      <button @click="blocklySaveLS" class="btn btn-primary px-4 rounded">
-        Save
-      </button>
-      <button @click="blocklyLoadLS" class="btn btn-secondary rounded">
-        Load
-      </button>
-      <button @click="showCanvas = !showCanvas" class="btn btn-neutral rounded">
-        Toggle visibility
-      </button>
-    </div>
-
-    <div ref="blocklyDiv" v-show="showCanvas" style="height: 80vh" class="blockly-app-wrapper"></div>
-
-    <div class="divider mb-2">⮟ Interface code generation ⮟</div>
-    <div role="tablist" class="tabs tabs-border">
-      <span class="tab text-black! dark:text-gray-400! pl-0 cursor-default">Show code for:</span>
-      <a v-for="option in selectionOptions" role="tab" class="tab"
-         :class="{'tab-active': selectedOption === option}"
-         @click="selectedOption = option"
-      >{{ option }}</a>
-    </div>
-    <div class="w-full flex gap-x-4 mt-4" v-show="selectedOption !== 'none'" key="code wrapper">
-      <code-highlight key="tydilang" v-show="(['all', 'tydilang'] as SelectedTab[]).includes(selectedOption)"
-                      :code="tlCode" language="scala" title="Tydi-Lang code"
-                      class="flex-1/3 min-w-0" />
-      <code-highlight key="chisel" v-show="(['all', 'chisel'] as SelectedTab[]).includes(selectedOption)"
-                      :code="chiselCode" language="scala" title="Tydi-Chisel code"
-                      class="flex-1/3 min-w-0" />
-      <code-highlight key="clash" v-show="(['all', 'clash'] as SelectedTab[]).includes(selectedOption)"
-                      :code="clashCode" language="haskell" title="Tydi-Clash code"
-                      class="flex-1/3 min-w-0" />
-    </div>
+  <div class="h-full">
+    <!-- Todo: maybe add save and load buttons back somehow -->
+    <div ref="blocklyDiv" v-show="showCanvas" class="h-full"></div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref, watch} from 'vue'
+import {markRaw, onMounted, type PropType, ref, shallowRef, watch} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
-import '@/blocks/dslBlocks'
+import '@/blocks/dslBlocks.ts'
+import type {IDockviewPanelProps} from 'dockview-vue'
 import toolbox from "@/blocks/toolbox.ts";
-import {generateTLCode} from "@/blocks/tlGenerator";
-import {generateChiselCode} from "@/blocks/ChiselGenerator";
-import CodeHighlight from "@/components/CodeHighlight.vue";
+import {generateTLCode} from "@/blocks/tlGenerator.ts";
+import {generateChiselCode} from "@/blocks/ChiselGenerator.ts";
 import {generateClashCode} from "@/blocks/ClashGenerator.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ArrayIndex, ObjectIndex, pathToList} from "@/Tydi/utils.ts";
@@ -62,24 +30,27 @@ import {
 } from "@/blocks/dslBlocks.ts";
 import {useMainStore} from "@/stores/mainStore.ts";
 
-type SelectedTab = "tydilang" | "chisel" | "clash" | "all" | "none"
-const selectionOptions: SelectedTab[] = ["tydilang", "chisel", "clash", "all", "none"]
-const selectedOption = ref<SelectedTab>("tydilang")
-
 const showCanvas = ref<boolean>(true)
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
-const workspace = ref<Blockly.WorkspaceSvg | null>(null)
-const tlCode = ref('// Start by creating a data structure')
-const chiselCode = ref('// Start by creating a data structure')
-const clashCode = ref('-- Start by creating a data structure')
-
-const tydiStructures = ref<TydiStreamlet[]>([])
-const tydiSteams = ref<TydiStream[]>([])
+const workspace = shallowRef<Blockly.WorkspaceSvg | null>(null)
 
 const selectedBlockType = ref<string | null>(null)
-const selectedBlock = ref<Blockly.BlockSvg | null>(null)
+const selectedBlock = shallowRef<Blockly.BlockSvg | null>(null)
 const selectedPath = ref<string | null>(null)
+
+const props = defineProps({
+  params: {
+    type: Object as PropType<IDockviewPanelProps>,
+    required: true,
+  }
+})
+
+// Resize the Blockly canvas when the tab is resized
+props.params.api.onDidDimensionsChange((event) => {
+  if (workspace.value === null) return
+  Blockly.svgResize(workspace.value as Blockly.WorkspaceSvg);
+})
 
 const store = useMainStore()
 
@@ -161,7 +132,9 @@ function processSchema(schema: any) {
 
   // After creating the structure, save it to the store
   // Fixme it seems like this does not include the mappings
-  store.blocklyState = Blockly.serialization.workspaces.save(workspace)
+  store.$patch((state) => {
+    state.blocklyState = markRaw(Blockly.serialization.workspaces.save(workspace))
+  })
 
   function mappingLabel(path: string) {
     return new Blockly.FieldLabel(path, "block-mapping-text")
@@ -311,9 +284,12 @@ function updateCode(event: any) {
   const _chiselCode = generateChiselCode(_workspace);
   // @ts-ignore
   const _clashCode = generateClashCode(_workspace);
-  tlCode.value = _tlCode;
-  chiselCode.value = _chiselCode;
-  clashCode.value = _clashCode;
+  // Write generated code to the store state
+  store.$patch((state) => {
+    state.tlCode = _tlCode;
+    state.chiselCode = _chiselCode;
+    state.clashCode = _clashCode;
+  })
 }
 
 function updateStructure(event: any) {
@@ -321,21 +297,25 @@ function updateStructure(event: any) {
   if (_workspace.isDragging()) return; // Don't update while changes are happening.
   if (!supportedEvents.has(event.type)) return;
 
-  // Save updated structure to the store so it can be restored later
-  store.blocklyState = Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg)
+  store.$patch((state) => {
+    // Save updated structure to the store so it can be restored later
+    store.blocklyState = markRaw(Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg))
 
-  const topBlocks = _workspace.getTopBlocks(false)
-  const structures: TydiStreamlet[] = []
-  for (let topBlock of topBlocks) {
-    if (topBlock.type !== streamletBDef.type) continue
-    structures.push(TydiStreamlet.fromBlock(topBlock))
-  }
-  tydiStructures.value = structures
-  store.$patch({
-    tydiSchema: structures,
-    streamVisualized: structures[0].streams['stream']
+    const topBlocks = _workspace.getTopBlocks(false)
+    const structures = [] as TydiStreamlet[]
+    for (let topBlock of topBlocks) {
+      if (topBlock.type !== streamletBDef.type) continue
+      structures.push(TydiStreamlet.fromBlock(topBlock))
+    }
+    store.tydiSchema = markRaw(structures)
+    if (structures.length) {
+      state.streamVisualized = markRaw(structures[0].streams['stream'])
+    }
+    store.selectedBlock = null
+    store.selectedPath = null
+    store.selectedElement = null
+    store.selectedStream = null
   })
-  tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
 
 watch(() => store.selectedBlock, (newBlock, oldBlock) => {

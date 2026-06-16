@@ -1,23 +1,103 @@
 <template>
-  <DataImport ref="dataImport" />
-  <div class="divider">⮟ To Tydi representation ⮟</div>
-  <BlocklyCanvas ref="blockly" />
-  <div class="divider">⮟ Physical streams and transfer simulation ⮟</div>
-  <StreamVisualizer v-if="store.streamVisualized" />
-  <div v-else>
-    <em>Create a Tydi structure to get started with the visualization</em>
-  </div>
-<!--  <stream-simulator />-->
+  <dockview-vue
+    @ready="onReady"
+    :theme="isDark ? themeDark : themeLight"
+    style="height: 100%"
+  >
+  </dockview-vue>
 </template>
 
+
+<script lang="ts">
+import BlocklyCanvas from './panels/BlocklyCanvas.vue'
+import DataImport from "@/panels/DataImport.vue";
+import StreamVisualizer from "@/panels/StreamVisualizer.vue";
+import PacketInspector from "@/panels/PacketInspector.vue";
+import CodeGen from "@/panels/CodeGen.vue";
+
+export default {
+  components: {
+    'blockly-canvas': BlocklyCanvas,
+    'data-import': DataImport,
+    'stream-visualizer': StreamVisualizer,
+    'packet-inspector': PacketInspector,
+    'code-gen': CodeGen,
+  }
+}
+</script>
+
 <script lang="ts" setup>
-import BlocklyCanvas from './components/BlocklyCanvas.vue'
-import DataImport from "@/components/DataImport.vue";
-import StreamVisualizer from "@/components/StreamVisualizer.vue";
 import {useMainStore} from "@/stores/mainStore.ts";
+import {type DockviewReadyEvent, DockviewVue, themeDark, themeLight} from "dockview-vue";
+import {markRaw} from "vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
 
+import { useDark, useToggle } from '@vueuse/core'
+// Boolean that tracks the current state of the dark mode
+const isDark = useDark()
+// Method to change the mode
+const toggleDark = useToggle(isDark)
+
 const store = useMainStore()
+
+function onReady(event: DockviewReadyEvent) {
+  const importPanel = event.api.addPanel({
+    id: 'data_import',
+    component: 'data-import',
+    title: "Data import"
+  })
+
+  const blocklyPanel = event.api.addPanel({
+    id: 'blockly_canvas',
+    component: 'blockly-canvas',
+    title: "Tydi structure builder",
+    position: {
+      referencePanel: importPanel,
+      direction: 'right',
+    }
+  })
+
+  const visualizerPanel = event.api.addPanel({
+    id: 'stream_visualizer',
+    component: 'stream-visualizer',
+    title: "Stream visualizer",
+    position: {
+      referencePanel: importPanel,
+      direction: 'below',
+    }
+  })
+  const inspectorPanel = event.api.addPanel({
+    id: 'packet_inspector',
+    component: 'packet-inspector',
+    title: "Packet inspector",
+    position: {
+      referencePanel: blocklyPanel,
+    },
+    inactive: true,
+  })
+  const codeGenPanel = event.api.addPanel({
+    id: 'code_gen',
+    component: 'code-gen',
+    title: "Code generator",
+    position: {
+      referencePanel: importPanel,
+      direction: 'within',
+    }
+  })
+  importPanel.api.setActive()
+  // event.api.activePanel = importPanel
+
+  // Store the panels in the store so that they can be accessed from anywhere
+  store.$patch({
+    panels: {
+      dataImport: markRaw(importPanel),
+      blocklyCanvas: markRaw(blocklyPanel),
+      streamVisualizer: markRaw(visualizerPanel),
+      packetInspector: markRaw(inspectorPanel),
+      codeGen: markRaw(codeGenPanel),
+    }
+  })
+}
 
 </script>
 
