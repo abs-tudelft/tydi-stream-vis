@@ -132,7 +132,9 @@ function processSchema(schema: any) {
 
   // After creating the structure, save it to the store
   // Fixme it seems like this does not include the mappings
-  store.blocklyState = Blockly.serialization.workspaces.save(workspace)
+  store.$patch((state) => {
+    state.blocklyState = shallowRef(Blockly.serialization.workspaces.save(workspace))
+  })
 
   function mappingLabel(path: string) {
     return new Blockly.FieldLabel(path, "block-mapping-text")
@@ -295,20 +297,20 @@ function updateStructure(event: any) {
   if (_workspace.isDragging()) return; // Don't update while changes are happening.
   if (!supportedEvents.has(event.type)) return;
 
-  // Save updated structure to the store so it can be restored later
-  store.blocklyState = Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg)
-
-  const topBlocks = _workspace.getTopBlocks(false)
-  const structures = [] as TydiStreamlet[]
-  for (let topBlock of topBlocks) {
-    if (topBlock.type !== streamletBDef.type) continue
-    structures.push(TydiStreamlet.fromBlock(topBlock))
-  }
-  // I do not understand why, but with the $patch method it works fine; with just using
-  // `store.tydiSchema.value = structures`, the recursion issues appear.
   store.$patch((state) => {
-    state.tydiSchema = structures
-    state.streamVisualized = structures[0].streams['stream']
+    // Save updated structure to the store so it can be restored later
+    store.blocklyState = shallowRef(Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg))
+
+    const topBlocks = _workspace.getTopBlocks(false)
+    const structures = [] as TydiStreamlet[]
+    for (let topBlock of topBlocks) {
+      if (topBlock.type !== streamletBDef.type) continue
+      structures.push(TydiStreamlet.fromBlock(topBlock))
+    }
+    store.tydiSchema = shallowRef(structures)
+    if (structures.length) {
+      state.streamVisualized = shallowRef(structures[0].streams['stream'])
+    }
   })
 }
 

@@ -11,13 +11,13 @@ export const useMainStore = defineStore('main', {
     state: () => ({
         sourceJson: "",
         parseError: "",
-        blocklyState: {} as { [key: string]: any },
+        // It is important to use `shallowRef` here, as the state is too deeply nested for pina to track
+        blocklyState: shallowRef({}),
         sourceData: null as jsonc.Node | null,
-        // In some cases, recursion issues can appear when setting the schema. See note in `BlocklyCanvas.vue`.
-        // `shallowRef` does not seem necessary, but it cannot harm either.
+        // `shallowRef` is not strictly necessary, but we don't need to track inside changes, the whole structure gets replaced.
         tydiSchema: shallowRef<TydiStreamlet[]>([]),
 
-        streamVisualized: shallowRef<TydiStream | null>(null),
+        streamVisualized: null as TydiStream | null,
         selectedBlock: null as Blockly.BlockSvg | null,
         selectedPath: null as jsonc.JSONPath | null,
         // Stream and packet inspection
