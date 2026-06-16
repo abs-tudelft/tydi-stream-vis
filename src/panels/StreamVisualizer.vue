@@ -112,6 +112,7 @@ function itemClick(item: TransferEl, stream: TydiStream) {
     }
     state.selectedPath = dataPath
   })
+  store.panels.packetInspector.api.setActive()
 }
 
 function elClasses(el: TransferEl) {

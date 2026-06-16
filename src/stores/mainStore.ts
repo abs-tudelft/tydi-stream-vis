@@ -5,6 +5,7 @@ import {generateSchema, type Schema} from "@/schemaParser.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
 import {ref} from "vue";
 import type {TransferEl} from "@/Tydi/TransferTypes.ts";
+import type {IDockviewPanel} from "dockview-vue";
 
 export const useMainStore = defineStore('main', {
     state: () => ({
@@ -24,6 +25,14 @@ export const useMainStore = defineStore('main', {
         tlCode: '// Start by creating a data structure',
         chiselCode: '// Start by creating a data structure',
         clashCode: '-- Start by creating a data structure',
+
+        panels: {
+            dataImport: {} as IDockviewPanel,
+            blocklyCanvas: {} as IDockviewPanel,
+            streamVisualizer: {} as IDockviewPanel,
+            packetInspector: {} as IDockviewPanel,
+            codeGen: {} as IDockviewPanel,
+        },
     }),
     getters: {
         parsedData(state): jsonc.Node | null {

@@ -39,28 +39,57 @@ function onReady(event: DockviewReadyEvent) {
     component: 'data-import',
     title: "Data import"
   })
+
   const blocklyPanel = event.api.addPanel({
     id: 'blockly_canvas',
     component: 'blockly-canvas',
     title: "Tydi structure builder",
+    position: {
+      referencePanel: importPanel,
+      direction: 'right',
+    }
   })
+
   const visualizerPanel = event.api.addPanel({
     id: 'stream_visualizer',
     component: 'stream-visualizer',
     title: "Stream visualizer",
+    position: {
+      referencePanel: importPanel,
+      direction: 'below',
+    }
   })
   const inspectorPanel = event.api.addPanel({
     id: 'packet_inspector',
     component: 'packet-inspector',
     title: "Packet inspector",
+    position: {
+      referencePanel: blocklyPanel,
+    },
+    inactive: true,
   })
   const codeGenPanel = event.api.addPanel({
     id: 'code_gen',
     component: 'code-gen',
     title: "Code generator",
+    position: {
+      referencePanel: importPanel,
+      direction: 'within',
+    }
   })
   importPanel.api.setActive()
   // event.api.activePanel = importPanel
+
+  // Store the panels in the store so that they can be accessed from anywhere
+  store.$patch({
+    panels: {
+      dataImport: importPanel,
+      blocklyCanvas: blocklyPanel,
+      streamVisualizer: visualizerPanel,
+      packetInspector: inspectorPanel,
+      codeGen: codeGenPanel
+    }
+  })
 }
 
 </script>
