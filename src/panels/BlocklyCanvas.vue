@@ -35,8 +35,6 @@ const showCanvas = ref<boolean>(true)
 const blocklyDiv = ref<HTMLDivElement | null>(null)
 const workspace = shallowRef<Blockly.WorkspaceSvg | null>(null)
 
-const tydiStructures = shallowRef<TydiStreamlet[]>([])
-
 const selectedBlockType = ref<string | null>(null)
 const selectedBlock = shallowRef<Blockly.BlockSvg | null>(null)
 const selectedPath = ref<string | null>(null)
@@ -306,10 +304,11 @@ function updateStructure(event: any) {
     if (topBlock.type !== streamletBDef.type) continue
     structures.push(TydiStreamlet.fromBlock(topBlock))
   }
-  tydiStructures.value = structures
-  store.$patch({
-    tydiSchema: structures,
-    // streamVisualized: tydiStructures.value[0].streams['stream']
+  // I do not understand why, but with the $patch method it works fine; with just using
+  // `store.tydiSchema.value = structures`, the recursion issues appear.
+  store.$patch((state) => {
+    state.tydiSchema = structures
+    state.streamVisualized = structures[0].streams['stream']
   })
 }
 

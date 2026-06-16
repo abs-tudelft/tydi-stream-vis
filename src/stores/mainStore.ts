@@ -13,9 +13,11 @@ export const useMainStore = defineStore('main', {
         parseError: "",
         blocklyState: {} as { [key: string]: any },
         sourceData: null as jsonc.Node | null,
+        // In some cases, recursion issues can appear when setting the schema. See note in `BlocklyCanvas.vue`.
+        // `shallowRef` does not seem necessary, but it cannot harm either.
         tydiSchema: shallowRef<TydiStreamlet[]>([]),
 
-        // streamVisualized: null as TydiStream | null,
+        streamVisualized: shallowRef<TydiStream | null>(null),
         selectedBlock: null as Blockly.BlockSvg | null,
         selectedPath: null as jsonc.JSONPath | null,
         // Stream and packet inspection
@@ -35,7 +37,7 @@ export const useMainStore = defineStore('main', {
         },
     }),
     getters: {
-        streamVisualized: (state) => state.tydiSchema.length ? state.tydiSchema[0].streams['stream'] : null,
+        // streamVisualized: (state) => state.tydiSchema.length ? state.tydiSchema[0].streams['stream'] : null,
         parsedData(state): jsonc.Node | null {
             if (state.sourceJson === '') return null
             let error = ''
