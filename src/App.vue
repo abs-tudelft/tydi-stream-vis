@@ -1,7 +1,7 @@
 <template>
   <dockview-vue
     @ready="onReady"
-    :theme="themeLight"
+    :theme="isDark ? themeDark : themeLight"
     style="height: 100%"
   >
   </dockview-vue>
@@ -28,9 +28,15 @@ export default {
 
 <script lang="ts" setup>
 import {useMainStore} from "@/stores/mainStore.ts";
-import {type DockviewReadyEvent, DockviewVue, themeLight} from "dockview-vue";
+import {type DockviewReadyEvent, DockviewVue, themeDark, themeLight} from "dockview-vue";
 import {markRaw} from "vue";
 // import StreamSimulator from "@/components/StreamSimulator.vue";
+
+import { useDark, useToggle } from '@vueuse/core'
+// Boolean that tracks the current state of the dark mode
+const isDark = useDark()
+// Method to change the mode
+const toggleDark = useToggle(isDark)
 
 const store = useMainStore()
 

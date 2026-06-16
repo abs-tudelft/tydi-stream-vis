@@ -50,7 +50,7 @@ defineExpose({select})
 </script>
 
 <template>
-  <code-editor-full-size v-model="store.sourceJson" :highlights="highlights" language="javascript" title="Input data" />
+  <code-editor-full-size v-model="store.sourceJson" placeholder="// Insert your JSON data here" :highlights="highlights" language="javascript" title="Input data" />
 </template>
 
 <style scoped>

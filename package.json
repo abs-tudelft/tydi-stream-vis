@@ -21,6 +21,7 @@
     "@types/node": "^25.9.3",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/tsconfig": "^0.9.1",
+    "@vueuse/core": "^14.3.0",
     "blockly": "^13.0.0",
     "daisyui": "^5.5.23",
     "highlight.js": "^11.11.1",
