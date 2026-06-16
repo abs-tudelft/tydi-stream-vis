@@ -311,6 +311,10 @@ function updateStructure(event: any) {
     if (structures.length) {
       state.streamVisualized = markRaw(structures[0].streams['stream'])
     }
+    store.selectedBlock = null
+    store.selectedPath = null
+    store.selectedElement = null
+    store.selectedStream = null
   })
 }
 

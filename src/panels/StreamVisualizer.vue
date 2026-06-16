@@ -97,6 +97,18 @@ function elRenderer(el: Object | number | string | boolean | null): string {
   }
 }
 
+function streamClick(stream: TydiStream) {
+  store.$patch((state) => {
+    state.selectedStream = markRaw(stream)
+    state.selectedElement = null
+    if (stream._block !== null) {
+      state.selectedBlock = markRaw(stream._block as Blockly.BlockSvg)
+    }
+    state.selectedPath = null
+  })
+  store.panels.packetInspector.api.setActive()
+}
+
 function itemClick(item: TransferEl, stream: TydiStream) {
   let i = 0
   const dataPath = stream.dataPathList.map(pathSegment => {
@@ -130,7 +142,7 @@ function elClasses(el: TransferEl) {
   <div class="w-full h-full overflow-auto p-4">
     <div>Number of physical streams: {{ physicalStreams?.length ?? 0 }}</div>
     <template v-for="(stream, i) in physicalStreams">
-      <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="store.selectedStream = stream">select</a></h3>
+      <h3 class="my-3">Stream {{ i }}: {{ stream.name }} <a class="text-blue-500 cursor-pointer" @click="streamClick(stream)">select</a></h3>
       <div>Stream {{ stream.name }} at <kbd>{{ stream.tydiPath }}</kbd> of type <kbd>{{ stream.physRepr() }}</kbd>
         that
         references <kbd>{{ stream.dataPath }}</kbd> is nested at dim <kbd>{{ stream.dNesting }}</kbd> from root
