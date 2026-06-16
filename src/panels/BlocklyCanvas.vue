@@ -307,9 +307,9 @@ function updateStructure(event: any) {
       if (topBlock.type !== streamletBDef.type) continue
       structures.push(TydiStreamlet.fromBlock(topBlock))
     }
-    store.tydiSchema = shallowRef(structures)
+    store.tydiSchema = structures
     if (structures.length) {
-      state.streamVisualized = shallowRef(structures[0].streams['stream'])
+      state.streamVisualized = structures[0].streams['stream']
     }
   })
 }
