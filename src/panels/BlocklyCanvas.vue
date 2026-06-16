@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, type PropType, ref, watch} from 'vue'
+import {onMounted, type PropType, ref, shallowRef, watch} from 'vue'
 import * as Blockly from 'blockly/core'
 import 'blockly/blocks' // Optional default blocks
 import 'blockly/javascript' // Or your target generator
@@ -33,13 +33,12 @@ import {useMainStore} from "@/stores/mainStore.ts";
 const showCanvas = ref<boolean>(true)
 
 const blocklyDiv = ref<HTMLDivElement | null>(null)
-const workspace = ref<Blockly.WorkspaceSvg | null>(null)
+const workspace = shallowRef<Blockly.WorkspaceSvg | null>(null)
 
-const tydiStructures = ref<TydiStreamlet[]>([])
-const tydiSteams = ref<TydiStream[]>([])
+const tydiStructures = shallowRef<TydiStreamlet[]>([])
 
 const selectedBlockType = ref<string | null>(null)
-const selectedBlock = ref<Blockly.BlockSvg | null>(null)
+const selectedBlock = shallowRef<Blockly.BlockSvg | null>(null)
 const selectedPath = ref<string | null>(null)
 
 const props = defineProps({
@@ -302,7 +301,7 @@ function updateStructure(event: any) {
   store.blocklyState = Blockly.serialization.workspaces.save(_workspace as Blockly.WorkspaceSvg)
 
   const topBlocks = _workspace.getTopBlocks(false)
-  const structures: TydiStreamlet[] = []
+  const structures = [] as TydiStreamlet[]
   for (let topBlock of topBlocks) {
     if (topBlock.type !== streamletBDef.type) continue
     structures.push(TydiStreamlet.fromBlock(topBlock))
@@ -310,9 +309,8 @@ function updateStructure(event: any) {
   tydiStructures.value = structures
   store.$patch({
     tydiSchema: structures,
-    streamVisualized: structures[0].streams['stream']
+    // streamVisualized: tydiStructures.value[0].streams['stream']
   })
-  tydiSteams.value = structures[0].streams['stream'].findStreams()
 }
 
 watch(() => store.selectedBlock, (newBlock, oldBlock) => {

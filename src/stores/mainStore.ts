@@ -3,7 +3,7 @@ import * as jsonc from "jsonc-parser";
 import * as Blockly from 'blockly/core'
 import {generateSchema, type Schema} from "@/schemaParser.ts";
 import {TydiStream, TydiStreamlet} from "@/Tydi/TydiTypes.ts";
-import {ref} from "vue";
+import {ref, shallowRef} from "vue";
 import type {TransferEl} from "@/Tydi/TransferTypes.ts";
 import type {IDockviewPanel} from "dockview-vue";
 
@@ -13,9 +13,9 @@ export const useMainStore = defineStore('main', {
         parseError: "",
         blocklyState: {} as { [key: string]: any },
         sourceData: null as jsonc.Node | null,
-        tydiSchema: [] as TydiStreamlet[],
+        tydiSchema: shallowRef<TydiStreamlet[]>([]),
 
-        streamVisualized: null as TydiStream | null,
+        // streamVisualized: null as TydiStream | null,
         selectedBlock: null as Blockly.BlockSvg | null,
         selectedPath: null as jsonc.JSONPath | null,
         // Stream and packet inspection
@@ -35,6 +35,7 @@ export const useMainStore = defineStore('main', {
         },
     }),
     getters: {
+        streamVisualized: (state) => state.tydiSchema.length ? state.tydiSchema[0].streams['stream'] : null,
         parsedData(state): jsonc.Node | null {
             if (state.sourceJson === '') return null
             let error = ''
