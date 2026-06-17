@@ -33,7 +33,7 @@ export function listToPath(path: (ObjectIndex | ArrayIndex)[]): string {
 }
 
 String.prototype.isDateTime = function (this: string): boolean {
-    return this.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})?Z$/) !== null
+    return this.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})?)?Z?$/) !== null
 }
 
 /**
