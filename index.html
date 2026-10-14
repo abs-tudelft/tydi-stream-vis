@@ -8,14 +8,18 @@
   <script>
     (function () {
       var oldBase = "/tydi-stream-vis";
-      var newTarget = "https://hdltypetech.github.io/tydi-stream-vis";
-      var l = window.location;
-      var path = l.pathname;
-      if (path.indexOf(oldBase) === 0) {
-        path = path.substring(oldBase.length);
+      var newBase = "https://hdltypetech.github.io/tydi-stream-vis";
+      // Use the raw href so the query string and fragment are copied
+      // byte-for-byte, without any decoding or re-encoding.
+      var href = window.location.href;
+      var rest = href.substring(window.location.origin.length);
+      if (rest.indexOf(oldBase) === 0) {
+        rest = rest.substring(oldBase.length);
       }
-      // Preserve path, query string (?...) and fragment (#...)
-      l.replace(newTarget + path + l.search + l.hash);
+      if (rest.charAt(0) !== "/") {
+        rest = "/" + rest;
+      }
+      window.location.replace(newBase + rest);
     })();
   </script>
   <noscript>
